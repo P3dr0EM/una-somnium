@@ -304,9 +304,12 @@ MonoBehaviour:
   jumpHeight: 3
   groundCheck: {fileID: 592107039}
   groundDistance: 0.4
-  groundMask:
+  groundLayerMask:
     serializedVersion: 2
     m_Bits: 8
+  interactableLayerMask:
+    serializedVersion: 2
+    m_Bits: 64
 --- !u!114 &1019310150
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,3 +1,4 @@
+using Assets.Scripts;
 using System;
 using Unity.Collections.Tests.CoreCLR.TestJobs;
 using UnityEngine;
@@ -18,9 +19,13 @@ public class MouseLook : MonoBehaviour
 
     public Transform groundCheck;
     public float groundDistance = .4f;
-    public LayerMask groundMask;
+    public LayerMask groundLayerMask;
     Vector3 velocity;
     Boolean isGrounded;
+
+
+    private float interactableRange = 6.0f;
+    [SerializeField] private LayerMask interactableLayerMask;
 
     private void Awake()
     {
@@ -36,7 +41,7 @@ public class MouseLook : MonoBehaviour
         Vector3 moveVector = transform.right * movementInput.x + transform.forward * movementInput.y;
         playerController.Move(moveVector * speed * Time.deltaTime);
 
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundLayerMask);
 
         if (inputSystem_Actions.Player.Jump.WasPerformedThisFrame() && isGrounded)
         {
@@ -62,6 +67,21 @@ public class MouseLook : MonoBehaviour
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
+        inputSystem_Actions.Player.Attack.performed += OnInputAttackPerformed;
+    }
+
+    private void OnDestroy()
+    {
+        inputSystem_Actions.Player.Attack.performed -= OnInputAttackPerformed;
+    }
+
+    void OnInputAttackPerformed(InputAction.CallbackContext context)
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out hit, interactableRange, interactableLayerMask))
+        {
+            if (hit.collider.TryGetComponent(out Interactable interactable)) interactable.Interact();
+        }
     }
     void Update()
     {
