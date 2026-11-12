@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 
-public class MouseLook : MonoBehaviour
+public class MouseLook : PortalTraveller
 {
     public float mouseSensitivity = 100f;
     public Transform playerBody;
