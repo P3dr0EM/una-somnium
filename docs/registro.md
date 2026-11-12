@@ -39,3 +39,15 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 - `docs/sistemas-base.md`: como usar os sistemas.
 - `docs/guias/teste-sistemas-base.md`: roteiro de teste.
 - `docs/notas/nota-portal-caio.md`: revisão do portal para VR.
+
+### Git (fim do dia)
+- O repositório local usa fork: `origin` = `P3dr0EM/una-somnium`, `upstream` = `ocai0/una-somnium` (Caio). As atualizações do Caio vêm de `git fetch upstream`.
+- P3DR0EM agora é colaborador no repositório do Caio.
+- **PR #1** (`feature/sistemas-base` → `main`): https://github.com/ocai0/una-somnium/pull/1. Merge feito pelo GitHub.
+
+### Próximos passos
+1. Mecânicas do roteiro: teclado numérico do cofre, gato (foge / é atraído pela ração), arquivo de metal empurrável, lustre que cai.
+2. Normalizar a escala e o pivô dos modelos do Blender e exportar em FBX.
+3. Save em disco (inventário + WorldState) com pontos de save no estilo RE.
+4. Teste no celular com Cardboard + gamepad (pendência P7).
+5. Combinar com o Caio as pendências P1 a P5 (`decisoes.md`).
