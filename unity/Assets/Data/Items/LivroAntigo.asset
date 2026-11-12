@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dfefaa288faeae1419b9581e22a09b42, type: 3}
+  m_Name: LivroAntigo
+  m_EditorClassIdentifier: Assembly-CSharp::Somnium.Items.ItemData
+  displayName: Livro Antigo
+  description: "Capa dura, pesado demais para ser s\xF3 papel."
+  icon: {fileID: 0}
+  inspectModel: {fileID: 8462584974042331566, guid: 929b68af8fe89c547aa8ff4c0d276cf9, type: 3}
+  inspectSize: 0.22
+  combinations: []

@@ -12,6 +12,8 @@ public class Itr_Door : Interactable
     private Quaternion _openRotation;
     private Coroutine _currentCoroutine;
 
+    public override string Prompt => !string.IsNullOrEmpty(promptText) ? promptText : (isOpen ? "Fechar" : "Abrir");
+
     void Start()
     {
         _closedRotation = transform.rotation;
