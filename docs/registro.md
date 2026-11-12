@@ -16,7 +16,7 @@ O que foi feito, em ordem. As decisões e os motivos estão em `decisoes.md`.
 - Branch **`feature/sistemas-base`** criada a partir da `main` atualizada.
 - `.gitignore` na raiz para backups do Blender; `models/pote_de_racao.blend1` tirado do repositório.
 
-### Código (branch `feature/sistemas-base`, ainda sem commit)
+### Código (branch `feature/sistemas-base`, commit `fce53b6`, local, sem push)
 - `PlayerInputLogic`:
   - nome da classe corrigido (era `MouseLook`) e `using` quebrado removido;
   - mantida a herança de `PortalTraveller` (Caio);
