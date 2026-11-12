@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dfefaa288faeae1419b9581e22a09b42, type: 3}
+  m_Name: MedalhaoMetadeB
+  m_EditorClassIdentifier: Assembly-CSharp::Somnium.Items.ItemData
+  displayName: "Outra Metade do Medalh\xE3o"
+  description: "A outra metade do medalh\xE3o do sol."
+  icon: {fileID: 0}
+  inspectModel: {fileID: 0}
+  inspectSize: 0.22
+  combinations: []
