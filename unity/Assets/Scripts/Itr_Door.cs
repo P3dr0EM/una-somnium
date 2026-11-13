@@ -12,7 +12,11 @@ public class Itr_Door : Interactable
     private Quaternion _openRotation;
     private Coroutine _currentCoroutine;
 
+    [Tooltip("Se falso, o jogador não abre pela mira; só por outro script/evento (ex.: porta principal aberta pelo ItemLock).")]
+    public bool interactableByPlayer = true;
+
     public override string Prompt => !string.IsNullOrEmpty(promptText) ? promptText : (isOpen ? "Fechar" : "Abrir");
+    public override bool CanInteract => base.CanInteract && interactableByPlayer;
 
     void Start()
     {

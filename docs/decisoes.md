@@ -21,6 +21,12 @@ Registro das decisões tomadas sobre o roteiro (rascunho) e o projeto. Cada deci
 | 2026-11-11 | **Alçapão**: mantém o pulo do roteiro, mas com protótipo cedo para testar o conforto no Cardboard. | Pulo e plataforma podem enjoar em VR. |
 | 2026-11-11 | **Uso de itens automático**: se o jogador tem o item certo, interagir com o objeto já usa. Sem o item, aparece uma dica. | Mais fluido com gamepad em VR. |
 | 2026-11-11 | **Inventário**: painel flutuante com o jogo pausado e o item em 3D girável (inspeção) no próprio painel. **Sem limite de espaço.** | Poucos itens (~15) no jogo; o foco é nos puzzles. |
+| 2026-11-12 | **Saguão** é o primeiro ambiente montado (blockout jogável), com estética de **hall de mansão decadente**: piso xadrez, escadaria dupla com mezanino, lustre, papel de parede gasto. | É o hub que liga as salas e onde o jogo começa e termina. |
+| 2026-11-12 | O Saguão é uma **cena própria** (`Rooms/00_Saguao/saguao.unity`), afastada da área externa (x = 1000). A ligação com o prédio e os portais do Caio fica para combinar. | Não mexer nas cenas do Caio. |
+| 2026-11-12 | As portas para as outras salas ficam **trancadas com placa** ("Sala em construção") até cada sala existir. | Blockout jogável sem depender das outras salas. |
+| 2026-11-12 | **Final do jogo**: as 5 chaves na Porta Principal abrem a porta, entra luz forte, a tela clareia até o branco, aparece **"Você acordou."** e o jogo recomeça. | Tema do sonho (Somnium). |
+| 2026-11-12 | A **Chave 4** aparece numa tampa no alto do pedestal da estátua ao encaixar o Medalhão do Sol (o jogador pega com a mira). | Leitura do roteiro: "a estátua abre revelando a Chave 4". |
+| 2026-11-12 | **Escadas sobem por rampa invisível**: degraus só visuais e um colisor em rampa por cima. Padrão para todas as escadas do jogo. | Subida suave, sem trancos de degrau em degrau (mais confortável em VR). |
 
 ## Projeto e organização
 
@@ -33,6 +39,9 @@ Registro das decisões tomadas sobre o roteiro (rascunho) e o projeto. Cada deci
 | 2026-11-11 | O script de exemplo `CardboardStartup` foi trocado na `persistencia` por `Somnium.Core.CardboardBootstrap`, que só roda com o Cardboard ativo. | O exemplo gerava erro a cada frame no editor/PC. |
 | 2026-11-11 | Backups do Blender (`*.blend1`, `*.blend2`) ficam fora do git (`.gitignore` na raiz). | Arquivos automáticos que só incham o repositório. |
 | 2026-11-11 | Caches do Unity e do Gradle ficam no **D:** (`D:\Unity\Cache`), via variáveis de ambiente do usuário. | O C: está quase cheio. |
+| 2026-11-12 | **`.gitattributes`**: arquivos que o Unity grava (cenas, prefabs, `.asset`, `.meta`, ProjectSettings) ficam como `-text`, sem conversão de quebra de linha. Scripts não foram afetados. | Resolve a P5: arquivos não aparecem mais como modificados sem mudança real. |
+| 2026-11-12 | Salas são geradas por **scripts de editor** (`Rooms/<sala>/Editor/...Builder.cs`) e depois editadas à mão. O gerador também renderiza **prévias em PNG**. | Blockout reproduzível e verificável sem abrir o editor. |
+| 2026-11-12 | Cada sala tem um **`RoomSettings`**, que torna a cena dela a ativa ao carregar (vale a iluminação ambiente e a neblina da sala). | A `persistencia` não deve ditar a luz de todas as salas. |
 
 ## Pendências
 
@@ -42,7 +51,9 @@ Registro das decisões tomadas sobre o roteiro (rascunho) e o projeto. Cada deci
 | P2 | **Portal em estéreo**: o portal renderiza com uma câmera só; no Cardboard cada olho vê errado. Opções em `docs/notas/nota-portal-caio.md`. | Caio | Portais funcionando no celular. |
 | P3 | `Portal.cs:115` usa `RenderSingleCamera`, que está obsoleto (aviso CS0618). | Caio | Evita quebra em atualização futura do URP. |
 | P4 | **Reorganizar as pastas antigas** para a estrutura híbrida (um commit só, combinado). | P3DR0EM + Caio | Projeto todo no mesmo padrão. |
-| P5 | **Quebras de linha (LF/CRLF)**: toda vez que o Unity abre, alguns `.asset` aparecem como modificados sem mudança real. Avaliar um `.gitattributes`. | P3DR0EM + Caio | Commits sem ruído. |
+| ~~P5~~ | ~~Quebras de linha (LF/CRLF)~~. **Resolvida em 2026-11-12** com `.gitattributes`. Se o Caio vir arquivos "modificados" sem mudança depois de puxar, basta um `git checkout -- .` (com o Unity fechado e sem alterações pendentes). | – | – |
 | P6 | **"Enter Play Mode Options" com o domínio sem recarregar** está ligado no projeto (Play mais rápido). Os sistemas novos já tratam isso; ficar atento a estados que "vazam" de um Play para outro. | Todos | (vigilância) |
 | P7 | Testar no **celular com Cardboard + gamepad** (inventário em VR, snap turn, legibilidade dos textos). | P3DR0EM | Validar a experiência em VR. |
 | P8 | Ajustes de sensação do teste no PC (velocidade, alcance, textos). Nada reportado ainda. | P3DR0EM | Ajuste fino. |
+| P9 | **Como o jogador chega ao Saguão?** Hoje ele é testado sozinho (spawn próprio). Opções: o `LevelPersistencia` carregar o Saguão como sala inicial, ou um portal/porta da área externa levar até ele. | P3DR0EM + Caio | Fluxo do jogo de ponta a ponta. |
+| P10 | **Arte final do Saguão**: trocar os blocos por modelos (estátua: há um `estatua.blend` em `models/`), texturas de papel de parede e madeira, iluminação baked para o celular. | P3DR0EM + Caio | Visual final. |

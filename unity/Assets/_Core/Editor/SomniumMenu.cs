@@ -68,6 +68,42 @@ namespace Somnium.EditorTools
             Debug.Log($"[Somnium] Itens do roteiro: {created} criados em {ItemsFolder} (os que já existiam foram mantidos).");
         }
 
+        // ---------- Debug (só no Play) ----------
+
+        [MenuItem("Somnium/Debug/Receber chaves 1-2-3-5 e o medalhão (a 4 vem da estátua)")]
+        static void GiveKeys() => GiveItems("Chave1", "Chave2", "Chave3", "Chave5", "MedalhaoDoSol");
+
+        [MenuItem("Somnium/Debug/Receber todos os itens do roteiro")]
+        static void GiveAll()
+        {
+            var ids = new string[RoteiroItems.GetLength(0)];
+            for (int i = 0; i < ids.Length; i++) ids[i] = RoteiroItems[i, 0];
+            GiveItems(ids);
+        }
+
+        [MenuItem("Somnium/Debug/Limpar inventário e estado do mundo")]
+        static void ClearState()
+        {
+            WorldState.Clear();
+            Inventory.Instance.Clear();
+            Debug.Log("[Somnium] Inventário e WorldState limpos (objetos já alterados na cena só voltam ao recarregar a sala).");
+        }
+
+        [MenuItem("Somnium/Debug/Receber chaves 1-2-3-5 e o medalhão (a 4 vem da estátua)", true)]
+        [MenuItem("Somnium/Debug/Receber todos os itens do roteiro", true)]
+        [MenuItem("Somnium/Debug/Limpar inventário e estado do mundo", true)]
+        static bool IsPlaying() => EditorApplication.isPlaying;
+
+        static void GiveItems(params string[] ids)
+        {
+            foreach (var id in ids)
+            {
+                var item = LoadItem(id);
+                if (item != null) Inventory.Instance.Add(item);
+            }
+            Debug.Log($"[Somnium] Itens adicionados ao inventário: {string.Join(", ", ids)}");
+        }
+
         /// <summary>Abre a persistencia (onde está o Player) + a cena de teste. Cria a cena de teste se ainda não existir.</summary>
         [MenuItem("Somnium/Teste/Abrir cena de teste")]
         public static void OpenTestScene()

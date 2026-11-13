@@ -51,3 +51,35 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 3. Save em disco (inventário + WorldState) com pontos de save no estilo RE.
 4. Teste no celular com Cardboard + gamepad (pendência P7).
 5. Combinar com o Caio as pendências P1 a P5 (`decisoes.md`).
+
+## 2026-11-12
+
+### Início
+- Sincronizado com o Caio: nada novo desde o merge do PR #1. Branch **`feature/saguao-blockout`** criada a partir da `main`.
+
+### Quebras de linha (P5 resolvida)
+- `.gitattributes` na raiz: arquivos serializados do Unity como `-text` (o git guarda os bytes como o Unity escreve) e binários marcados.
+- Cópias locais regravadas uma vez. Depois de 4 execuções do Unity, nenhum arquivo apareceu como modificado sem motivo.
+
+### Saguão central (blockout jogável)
+- Gerador `Rooms/00_Saguao/Editor/SaguaoBuilder.cs`, com os menus **Somnium → Salas → Abrir Saguão / Gerar blockout / Renderizar prévias**.
+- Cena `Rooms/00_Saguao/saguao.unity` (adicionada à lista de cenas do build):
+  - hall de 14,4 × 16,8 m e pé-direito de 7 m;
+  - piso xadrez em 28 placas (limite de 4 luzes por objeto no celular);
+  - escadaria dupla e mezanino com guarda-corpo;
+  - lustre e 6 arandelas; tapete, bancos, quadros, vasos e um bilhete.
+- **Porta Principal**: 5 fechaduras (`ItemLock` com inserção parcial), chaves que aparecem nas fechaduras conforme são inseridas (`LockProgressIndicator`) e final do jogo (`GameEnding`).
+- **Estátua**: o Medalhão do Sol encaixa no pedestal, a tampa some e a Chave 4 aparece.
+- **4 portas** com placas (Colinas XP, Escritório Azul, Salão Invertido, Estufa), trancadas com a mensagem "em construção" (`MessageInteractable`).
+- Prévias renderizadas pelo Unity em batch, revisadas e corrigidas: iluminação reforçada perto do spawn e chão claro fora da porta no final.
+
+### Sistemas novos ou alterados
+- `ItemLock`: evento `onProgressChanged(int)` e `InsertedCount()` público.
+- `Itr_Door` (Caio): opção `interactableByPlayer` (o padrão continua `true`, sem mudança para as portas existentes).
+- `Inventory.Clear()`.
+- Novos: `LockProgressIndicator`, `MessageInteractable`, `ScreenFader` (fade de tela inteira, também no VR), `GameEnding` (final + recomeço), `RoomSettings` (luz da sala).
+- Menu **Somnium → Debug** (só no Play): receber chaves, receber todos os itens, limpar o estado.
+
+### Teste do P3DR0EM e ajuste da escada
+- Teste no PC: tudo funcionou (estátua, chaves, final com recomeço, luz e ambientação). Console sem erros.
+- A subida da escada estava aos trancos (o jogador "pulava" degrau por degrau pelo `stepOffset`). Correção: os degraus viraram só visuais e cada escada ganhou uma **rampa invisível** (`Rampa_Colisao`, ~38,7°, abaixo do `slopeLimit` de 45°) passando pelas quinas dos degraus. O último degrau mantém a colisão para emendar com o mezanino.

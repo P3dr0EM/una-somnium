@@ -49,6 +49,14 @@ namespace Somnium.Items
             return true;
         }
 
+        /// <summary>Esvazia o inventário (ex.: recomeçar o jogo).</summary>
+        public void Clear()
+        {
+            if (items.Count == 0) return;
+            items.Clear();
+            Changed?.Invoke();
+        }
+
         /// <summary>Troca um item por outro na mesma posição (ex.: Livro Antigo vira Livro Aberto).</summary>
         public void Replace(ItemData oldItem, ItemData newItem)
         {

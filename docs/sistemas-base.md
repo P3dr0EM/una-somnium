@@ -74,3 +74,24 @@ Para lembrar o estado entre recargas da sala, use `WorldState.Has/Set` com `Worl
 - **Domain reload desligado**: o projeto usa "Enter Play Mode Options". Os estáticos dos sistemas são zerados com `RuntimeInitializeOnLoadMethod(SubsystemRegistration)`.
 - **Input**: as ações novas (`Inventory`, `Combine`) estão no `InputSystem_Actions.inputactions`. O código lê por nome (`InputSystem.actions.FindAction("Player/Inventory")`), sem depender da classe gerada.
 - **Mira**: raio com alcance de 2,5 m em todas as layers. Volumes trigger sem Interactable são ignorados, então o `ScenePartLoader` não bloqueia.
+
+## Adicionados em 2026-11-12
+
+| Componente | Onde | Uso |
+|---|---|---|
+| `MessageInteractable` | `Mechanics/Interaction/Scripts` | Placas, bilhetes, portas trancadas: mostra **Message** ao interagir. **Prompt Text** = texto da mira (padrão "Examinar"). |
+| `LockProgressIndicator` | `Mechanics/Interaction/Scripts` | Mostra o progresso de um `ItemLock` com Accept Partial: liga os N primeiros de **Inserted Visuals** (ex.: chaves nas fechaduras). |
+| `ItemLock.onProgressChanged(int)` | | Evento com quantos itens já foram inseridos (também disparado no Start). |
+| `Itr_Door.interactableByPlayer` | `Scripts/Itr_Door.cs` | Desligado = a mira ignora a porta; ela só abre por evento (ex.: `GameEnding`). |
+| `ScreenFader` | `_Core/Scripts/UI` | `yield return ScreenFader.Instance.FadeTo(cor, alpha, segundos)` e `ShowText(...)`. Cobre o campo de visão também no Cardboard. |
+| `GameEnding` | `_Core/Scripts/Flow` | Final: abre **Doors To Open**, liga **Activate On Begin**, fade branco, **Message**, e recomeça (`GameEnding.Restart()` limpa o inventário e o WorldState e recarrega as cenas abertas, que precisam estar na lista de cenas do build). |
+| `RoomSettings` | `_Core/Scripts/Flow` | Um por sala: torna a cena da sala a ativa ao carregar, para valer a luz ambiente e a neblina dela. |
+
+### Gerar uma sala por script (modelo: Saguão)
+- `Rooms/00_Saguao/Editor/SaguaoBuilder.cs` monta a cena com blocos (cubos com materiais URP em `Rooms/00_Saguao/Materials`), liga os puzzles e salva.
+- **Gerar de novo sobrescreve a cena** (o menu pede confirmação). Depois de editar à mão, não gere de novo.
+- `RenderPreviews()` salva PNGs de vistas fixas (padrão `unity/Temp/Previews`). Em batch: `-executeMethod Somnium.EditorTools.Rooms.SaguaoBuilder.RenderPreviews -previewOut <pasta>` (sem `-nographics`).
+
+### Menu de debug (só com o jogo rodando)
+- **Somnium → Debug → Receber chaves 1-2-3-5 e o medalhão** (a 4 vem da estátua).
+- **Receber todos os itens do roteiro** e **Limpar inventário e estado do mundo**.
