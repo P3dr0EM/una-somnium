@@ -38,6 +38,8 @@ namespace Somnium.Interaction
             if (GameState.InMenu || GameState.MenuClosedThisFrame)
             {
                 focused = null;
+                hud.SetPrompt(null);
+                hud.SetFocused(false);
                 return;
             }
 

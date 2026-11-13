@@ -1,0 +1,63 @@
+# Quebras de linha (pendência P5 em docs/decisoes.md)
+#
+# O Unity grava os próprios arquivos (cenas, prefabs, assets, .meta, ProjectSettings)
+# sempre com LF. Com core.autocrlf=true no Windows, o git convertia esses arquivos para CRLF
+# no checkout e eles apareciam como "modificados" toda vez que o Unity abria, sem mudança real.
+# "-text" = o git guarda e devolve os bytes exatamente como o Unity escreveu, sem converter.
+#
+# Scripts (.cs, .shader) e documentos (.md) seguem a configuração de cada dev.
+
+# Arquivos serializados do Unity (YAML)
+*.unity -text
+*.prefab -text
+*.asset -text
+*.meta -text
+*.mat -text
+*.anim -text
+*.controller -text
+*.overrideController -text
+*.mask -text
+*.physicMaterial -text
+*.physicsMaterial2D -text
+*.playable -text
+*.signal -text
+*.preset -text
+*.mixer -text
+*.lighting -text
+*.renderTexture -text
+*.cubemap -text
+*.flare -text
+*.terrainlayer -text
+*.spriteatlas -text
+*.spriteatlasv2 -text
+*.brush -text
+*.fontsettings -text
+*.guiskin -text
+*.shadergraph -text
+*.shadersubgraph -text
+*.inputactions -text
+*.asmdef -text
+*.asmref -text
+unity/ProjectSettings/** -text
+unity/Packages/manifest.json -text
+unity/Packages/packages-lock.json -text
+
+# Binários (nunca tentar mesclar nem converter)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.jfif binary
+*.tga binary
+*.psd binary
+*.exr binary
+*.hdr binary
+*.fbx binary
+*.obj binary
+*.blend binary
+*.blend1 binary
+*.wav binary
+*.mp3 binary
+*.ogg binary
+*.ttf binary
+*.otf binary
+*.pdf binary

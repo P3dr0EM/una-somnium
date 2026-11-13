@@ -41,6 +41,8 @@ namespace Somnium.Interaction
         public UnityEvent onUnlocked = new UnityEvent();
         [Tooltip("Chamado no Start quando já estava destravado (sala recarregada). Use para pôr o estado final sem animação.")]
         public UnityEvent onRestoredUnlocked = new UnityEvent();
+        [Tooltip("Com Accept Partial: chamado com quantos itens já foram inseridos (também no Start). Ex.: acender fechaduras.")]
+        public UnityEvent<int> onProgressChanged = new UnityEvent<int>();
 
         [Header("Save")]
         [Tooltip("Id único. Vazio = cena + caminho na hierarquia.")]
@@ -68,6 +70,7 @@ namespace Somnium.Interaction
 
         void Start()
         {
+            if (acceptPartial) onProgressChanged.Invoke(InsertedCount());
             if (!WorldState.Has(Key)) return;
             unlocked = true;
             ApplyUnlockedState();
@@ -103,6 +106,7 @@ namespace Somnium.Interaction
                 }
 
                 int inserted = InsertedCount();
+                if (used.Count > 0) onProgressChanged.Invoke(inserted);
                 if (inserted >= requiredItems.Count)
                 {
                     Unlock();
@@ -167,7 +171,8 @@ namespace Somnium.Interaction
             return requiredItems[0];
         }
 
-        int InsertedCount()
+        /// <summary>Quantos dos itens exigidos já foram inseridos (Accept Partial).</summary>
+        public int InsertedCount()
         {
             int n = 0;
             foreach (var item in requiredItems)
