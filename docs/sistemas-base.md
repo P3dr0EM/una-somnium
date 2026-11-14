@@ -93,5 +93,23 @@ Para lembrar o estado entre recargas da sala, use `WorldState.Has/Set` com `Worl
 - `RenderPreviews()` salva PNGs de vistas fixas (padrão `unity/Temp/Previews`). Em batch: `-executeMethod Somnium.EditorTools.Rooms.SaguaoBuilder.RenderPreviews -previewOut <pasta>` (sem `-nographics`).
 
 ### Menu de debug (só com o jogo rodando)
-- **Somnium → Debug → Receber chaves 1-2-3-5 e o medalhão** (a 4 vem da estátua).
+- **Somnium → Debug → Receber chaves 1-2-3 e o medalhão** (a 4 vem da estátua). Com o fluxo de 4 chaves (2026-11-14).
 - **Receber todos os itens do roteiro** e **Limpar inventário e estado do mundo**.
+- **Receber Lata de Ração (testar o gato)**.
+
+## Adicionados em 2026-11-14
+
+| Componente | Onde | Uso |
+|---|---|---|
+| `RoomTransition` | `_Core/Scripts/Flow` | Troca de sala: `RoomTransition.Go(caminhoDaCena, spawnId, cenaAtual)`. Escurece a tela, carrega a sala de destino (aditiva), põe o jogador no spawn, descarrega a sala atual e clareia. O estado das salas fica no `WorldState`. |
+| `RoomDoor` | `Mechanics/Interaction/Scripts` | Porta para outra sala: **Target Scene Path** (`Assets/Rooms/...unity`, precisa estar na lista de cenas do build) e **Spawn Id**. |
+| `PlayerSpawnPoint.id` / `placeOnStart` | `_Core/Scripts` | **Id** = nome do ponto, usado pelas portas. **Place On Start** = levar o jogador até ali ao abrir a cena direto (deixe ligado em só um por sala; pontos de chegada de portas ficam desligados). |
+| `ItemLock.extraRewardItems` | | Itens extras ao destravar (o gato dá a Chave 1 e a Metade do Medalhão). A mensagem lista tudo: "Obteve: ...". |
+| `ItemLock.usablePromptText` | | Dica quando o jogador tem o item (ex.: "Dar ração"); vazio = "Usar <item>". |
+| `Brilho` | `Mechanics/Interaction/Scripts` | Num objeto filho pequeno e emissivo: pisca de tempos em tempos para chamar atenção a um item escondido. |
+| `GatoTeleporte` | `Rooms/01_ColinasXP/Scripts` | Gato que se teletransporta para longe (até **Max Distance From Center** da porta, à frente do jogador). Fica parado com o **Calm Item** no inventário ou depois de alimentado (**Feed Lock**). |
+
+### Ligações entre salas
+- **Saguão → Colinas XP**: a porta "Colinas XP" (`RoomDoor`) leva ao spawn `inicio` da Colinas.
+- **Colinas XP → Saguão**: a porta no meio do campo leva ao spawn `de_colinas`, na frente da porta da Colinas, virado para o hall.
+- Nova sala: crie um `PlayerSpawnPoint` com id próprio ao lado da porta de volta e um `RoomDoor` apontando para a cena.

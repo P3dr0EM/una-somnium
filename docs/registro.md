@@ -83,3 +83,52 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 ### Teste do P3DR0EM e ajuste da escada
 - Teste no PC: tudo funcionou (estátua, chaves, final com recomeço, luz e ambientação). Console sem erros.
 - A subida da escada estava aos trancos (o jogador "pulava" degrau por degrau pelo `stepOffset`). Correção: os degraus viraram só visuais e cada escada ganhou uma **rampa invisível** (`Rampa_Colisao`, ~38,7°, abaixo do `slopeLimit` de 45°) passando pelas quinas dos degraus. O último degrau mantém a colisão para emendar com o mezanino.
+
+### Fechamento do dia
+- **PR #2 aceito** (merge `b9b0b05`): Saguão, final do jogo e `.gitattributes` na `main`.
+- Atribuição automática do Claude nos commits/PRs **desligada** (configuração local do P3DR0EM).
+- **Planejamento até a apresentação de 23/11** e redução de escopo (ver `decisoes.md`, 2026-11-12):
+  - Sala das Piscinas descartada.
+  - Fluxo enxuto com 4 salas e 4 chaves.
+  - Conceito novo da Colinas XP (porta isolada no campo).
+  - Gato que se teletransporta.
+- Mensagem com o status e a lista de modelos por prioridade enviada ao grupo.
+
+## 2026-11-14
+
+### Início
+- Sincronizado com o Caio: nada novo. Branch **`feature/colinas-xp`** criada a partir da `main`.
+- A sessão de sexta (13) não aconteceu; cronograma ajustado (ver "Cronograma até a apresentação" em `decisoes.md`).
+
+### Colinas XP (blockout jogável)
+- Gerador `Rooms/01_ColinasXP/Editor/ColinasBuilder.cs`, com os menus **Somnium → Salas → Abrir Colinas XP / Gerar blockout / Renderizar prévias**.
+- Cena `Rooms/01_ColinasXP/colinas_xp.unity` (em x = 2000):
+  - campo de colinas gerado por código (360 × 360 m, ~16 mil triângulos), plano perto da porta e com bordas que sobem para fechar o horizonte;
+  - textura de grama estilizada e tufos 3D só num raio de 16 m (uma malha só, ~4 mil triângulos);
+  - céu panorâmico próprio com nuvens paradas, neblina azul-clara e sol com sombra.
+- **Porta**: a do Caio, tirada do prefab do portal (folha fechada e pintada de branco), com tijolos e hera. Interagir leva de volta ao Saguão.
+- **Gato**: modelo low poly sentado (CC BY), com coleira e chave. Se teletransporta (`GatoTeleporte`); com a Lata de Ração, "Dar ração" entrega a Chave 1 e a Metade do Medalhão e o pote aparece.
+- **Manivela Quadrada** numa moita atrás da porta, com um brilho que pisca.
+- Limite invisível a 46 m da porta.
+
+### Passagem entre salas
+- Novos `RoomTransition` e `RoomDoor`; `PlayerSpawnPoint` ganhou `id` e `placeOnStart`.
+- No Saguão, a porta "Colinas XP" agora funciona. Há um ponto de chegada na volta e a Porta Principal passou para **4 fechaduras** (fluxo enxuto); o bilhete fala em "quatro portas, quatro chaves".
+
+### Outros
+- `pote_de_racao.blend` (em `models/`) ainda tem 3 variações lado a lado, com ~2 m. Por isso o pote do blockout é de blocos.
+- O `.blend` dos modelos não foi tocado. `Galão`, `escrivaninha` e `estatua` têm alterações locais do grupo, fora deste commit.
+
+### Teste do P3DR0EM na Colinas XP e ajustes
+- **Retorno:**
+  - campo aberto muito confortável em VR;
+  - tamanho do gato bom; manivela com boa dificuldade;
+  - transição e desempenho no PC ideais.
+- **Bug corrigido:** ao voltar a uma sala, o inventário aparecia vazio e o Console mostrava `MissingReferenceException ... Image`.
+  - Causa: a raiz da UI do inventário era criada sem pai, ou seja, na **cena ativa** (a sala), e era destruída quando a sala era descarregada. Os itens nunca se perderam.
+  - Correção: `InventoryUI` move a raiz para a cena do Player (`persistencia`).
+  - Regra: **objeto criado em tempo de execução precisa de pai, ou ir para a cena da persistencia, ou ser `DontDestroyOnLoad`**.
+- **Gato:** agora **preto, com coleira azul**. Contraste forte com o verde e combinação legível nos tipos comuns de daltonismo; o laranja se confundia com o verde.
+- **Miado** sintetizado por código (`Rooms/01_ColinasXP/Audio/miado.wav`, sem licença de terceiros), em **som 3D** (vem da direção do gato):
+  - toca quando o gato pisca e a cada 8 a 15 s, com o tom variando;
+  - para depois de alimentado.

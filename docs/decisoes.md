@@ -27,6 +27,36 @@ Registro das decisões tomadas sobre o roteiro (rascunho) e o projeto. Cada deci
 | 2026-11-12 | **Final do jogo**: as 5 chaves na Porta Principal abrem a porta, entra luz forte, a tela clareia até o branco, aparece **"Você acordou."** e o jogo recomeça. | Tema do sonho (Somnium). |
 | 2026-11-12 | A **Chave 4** aparece numa tampa no alto do pedestal da estátua ao encaixar o Medalhão do Sol (o jogador pega com a mira). | Leitura do roteiro: "a estátua abre revelando a Chave 4". |
 | 2026-11-12 | **Escadas sobem por rampa invisível**: degraus só visuais e um colisor em rampa por cima. Padrão para todas as escadas do jogo. | Subida suave, sem trancos de degrau em degrau (mais confortável em VR). |
+| 2026-11-12 | **Sala das Piscinas descartada** (decisão do grupo). | Escopo para a apresentação de 23/11. |
+| 2026-11-12 | **Fluxo enxuto (opção B): 4 salas e 4 chaves.** Saem o código nas nuvens, o cofre com teclado (antiga Chave 5), o pulo pelo alçapão e o arquivo empurrado. A Porta Principal passa a ter **4 fechaduras**. Fluxo completo abaixo. | Cabe no prazo e corta o sistema mais arriscado em VR (digitar código com gamepad). |
+| 2026-11-12 | **Colinas XP**: a porta e o batente ficam **sozinhos no meio de um campo verde infinito** (estilo papel de parede do XP + porta de Suzume), com 360° de circulação. No roteiro original, as paredes mostravam que era um cenário fechado; isso foi substituído. Céu e colinas são **próprios** (não usar a foto *Bliss*, que tem direitos). | Ideia do P3DR0EM e do Caio: contraste forte entre a sala fechada e o espaço aberto em VR. |
+| 2026-11-12 | A porta da Colinas XP começa **simples** (atravessar = fade e volta ao Saguão). Se o portal em estéreo (P2) for resolvido, ela vira portal com vista do Saguão. | Não deixar a sala dependente de um problema técnico. |
+| 2026-11-12 | **Gato**: sem animação. Quando o jogador chega a ~3 m, ele **se teletransporta** ("pisca") para um ponto a até 30 m da porta, a pelo menos ~10 m do jogador e **dentro do campo de visão** dele. Com a Lata de Ração no inventário, ele fica parado; mirar mostra "Dar ração" e interagir entrega a **Chave 1** e a **Metade do Medalhão** (o pote de ração aparece ao lado dele). | Ideia do P3DR0EM: poupa a animação e combina com o clima de sonho; reaparecer à vista evita o jogador perder o gato. |
+| 2026-11-14 | Gato **preto com coleira azul** (contraste no campo, inclusive para daltonismo) e **miado 3D** a cada 8–15 s e ao piscar, para chamar a atenção e disputar o foco com a busca da Manivela. | Retorno do teste do P3DR0EM. |
+| 2026-11-12 | Modelo do gato: **low poly sentado** (428 triângulos, licença **CC BY**, crédito em `CREDITOS.md`). O projeto é **acadêmico, sem venda**. | Leve para o celular; a pose sentada combina com o teletransporte. |
+
+### Fluxo de gameplay (opção B)
+1. Começa no **Saguão**, de frente para a Porta Principal (4 fechaduras).
+2. **Colinas XP**: o gato com a Chave 1 se teletransporta para longe; na grama está a **Manivela Quadrada**.
+3. **Salão Invertido**: a Manivela no mecanismo da parede derruba o lustre, que revela o **Livro Antigo**; inspecionado em 3D, o Livro tem um fundo falso com o **Alicate**.
+4. **Escritório Azul**: o Alicate corta a corrente do alçapão; no nicho estão a **Chave 2** e a **Lata de Ração**; na sala fica o galão de ácido.
+5. **Colinas XP**: dar a ração ao gato dá a **Chave 1** e a **Metade do Medalhão**.
+6. **Estufa**: a planta bloqueia a Chave 3; ali está o **Cartucho Vazio**. Cartucho + ácido (no Escritório) = **Herbicida**; nos sprinklers, a planta murcha e libera a **Chave 3** e a **outra Metade**.
+7. As duas metades formam o **Medalhão do Sol**; na estátua do Saguão, ele libera a **Chave 4**.
+8. Com as 4 chaves, a Porta Principal se abre: "Você acordou."
+
+### Cronograma até a apresentação (23/11)
+Revisto em 2026-11-14 porque a sessão de sexta (13) não aconteceu. O domingo, 22, deixou de ser folga.
+
+| Dia | Foco |
+|---|---|
+| Sáb 14 | Colinas XP + passagem entre salas (portas do Saguão) |
+| Dom 15 | Escritório Azul |
+| Qua 18 | Salão Invertido |
+| Qui 19 | Estufa |
+| Sex 20 | Ponta a ponta com o Caio (P9) + teste no celular |
+| Sáb 21 | Modelos e acabamento |
+| Dom 22 | Versão congelada, correções e ensaio |
 
 ## Projeto e organização
 
@@ -57,3 +87,5 @@ Registro das decisões tomadas sobre o roteiro (rascunho) e o projeto. Cada deci
 | P8 | Ajustes de sensação do teste no PC (velocidade, alcance, textos). Nada reportado ainda. | P3DR0EM | Ajuste fino. |
 | P9 | **Como o jogador chega ao Saguão?** Hoje ele é testado sozinho (spawn próprio). Opções: o `LevelPersistencia` carregar o Saguão como sala inicial, ou um portal/porta da área externa levar até ele. | P3DR0EM + Caio | Fluxo do jogo de ponta a ponta. |
 | P10 | **Arte final do Saguão**: trocar os blocos por modelos (estátua: há um `estatua.blend` em `models/`), texturas de papel de parede e madeira, iluminação baked para o celular. | P3DR0EM + Caio | Visual final. |
+| P11 | **Crédito do gato (CC BY)**: preencher autor e link em `CREDITOS.md`. | P3DR0EM | Cumprir a licença. |
+| P12 | **Porta da Colinas XP como portal** (ver o Saguão através dela). Depende da P2. | Caio | Efeito "Suzume" completo. |

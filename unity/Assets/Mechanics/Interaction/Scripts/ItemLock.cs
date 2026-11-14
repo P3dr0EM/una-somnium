@@ -14,7 +14,7 @@ namespace Somnium.Interaction
     ///  - Corrente do alçapão: requer Alicate, desativa a corrente.
     ///  - Mecanismo do Salão Invertido: requer Manivela Quadrada, onUnlocked derruba o lustre.
     ///  - Galão de ácido: requer Cartucho Vazio, recompensa Herbicida.
-    ///  - Porta Principal: requer as 5 chaves com "acceptPartial" (vai inserindo e mostra 3/5).
+    ///  - Porta Principal: requer as 4 chaves com "acceptPartial" (vai inserindo e mostra 3/4).
     /// O estado fica salvo no WorldState: se a sala for descarregada e recarregada, continua destravado.
     /// </summary>
     public class ItemLock : Interactable
@@ -30,10 +30,14 @@ namespace Somnium.Interaction
         [TextArea] public string lockedMessage = "Não consigo fazer nada com isto agora.";
         [TextArea] public string unlockedMessage = "";
         [TextArea] public string alreadyUnlockedMessage = "";
+        [Tooltip("Dica quando o jogador tem o item (ex.: 'Dar ração'). Vazio = 'Usar <item>'.")]
+        public string usablePromptText = "";
 
         [Header("Resultado")]
         [Tooltip("Item recebido ao destravar (ex.: Herbicida).")]
         public ItemData rewardItem;
+        [Tooltip("Itens extras recebidos ao destravar (ex.: o gato dá a Chave 1 e a Metade do Medalhão).")]
+        public ItemData[] extraRewardItems = new ItemData[0];
         public GameObject[] activateOnUnlock = new GameObject[0];
         public GameObject[] deactivateOnUnlock = new GameObject[0];
         [Tooltip("Depois de destravar, a mira passa a ignorar este objeto.")]
@@ -63,7 +67,7 @@ namespace Somnium.Interaction
             get
             {
                 var usable = FirstUsableItem();
-                if (usable != null) return $"Usar {usable.DisplayName}";
+                if (usable != null) return string.IsNullOrEmpty(usablePromptText) ? $"Usar {usable.DisplayName}" : usablePromptText;
                 return string.IsNullOrEmpty(promptText) ? "Examinar" : promptText;
             }
         }
@@ -136,12 +140,22 @@ namespace Somnium.Interaction
         {
             unlocked = true;
             WorldState.Set(Key);
+            var rewards = new List<string>();
+            if (rewardItem != null) rewards.Add(rewardItem.DisplayName);
+            foreach (var extra in extraRewardItems)
+                if (extra != null) rewards.Add(extra.DisplayName);
             if (rewardItem != null) Inventory.Instance.Add(rewardItem);
+            foreach (var extra in extraRewardItems)
+                if (extra != null) Inventory.Instance.Add(extra);
 
             ApplyUnlockedState();
 
             string msg = unlockedMessage;
-            if (string.IsNullOrEmpty(msg) && rewardItem != null) msg = $"Obteve: {rewardItem.DisplayName}";
+            if (rewards.Count > 0)
+            {
+                string got = $"Obteve: {string.Join(", ", rewards)}";
+                msg = string.IsNullOrEmpty(msg) ? got : msg + "\n" + got;
+            }
             if (!string.IsNullOrEmpty(msg)) HUD.Instance.ShowMessage(msg);
 
             onUnlocked.Invoke();
