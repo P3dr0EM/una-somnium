@@ -460,8 +460,8 @@ namespace Somnium.EditorTools.Rooms
 
         static void BuildCat(Transform door)
         {
-            var fur = Mat("Colinas_Gato", new Color(0.86f, 0.52f, 0.22f), 0.15f);
-            var collarMat = Mat("Colinas_Coleira", new Color(0.7f, 0.08f, 0.1f), 0.3f);
+            var fur = Mat("Colinas_Gato", new Color(0.05f, 0.05f, 0.06f), 0.35f); // preto: contraste forte com o verde (também para daltonismo)
+            var collarMat = Mat("Colinas_Coleira", new Color(0.12f, 0.42f, 1f), 0.3f); // azul: legível sobre o preto para os tipos comuns de daltonismo
             var gold = Mat("Colinas_Dourado", new Color(0.85f, 0.65f, 0.25f), 0.7f, 1f);
 
             var p = CatStart;
@@ -558,6 +558,100 @@ namespace Somnium.EditorTools.Rooms
             tele.calmItem = Item("LataDeRacao");
             tele.feedLock = feed;
             tele.bowl = bowl;
+
+            // Miado 3D: vem da direção do gato e cai com a distância (dá para achar o gato pelo som no fone).
+            var src = cat.gameObject.AddComponent<AudioSource>();
+            src.clip = MeowClip();
+            src.playOnAwake = false;
+            src.spatialBlend = 1f;
+            src.rolloffMode = AudioRolloffMode.Logarithmic;
+            src.minDistance = 3f;
+            src.maxDistance = 60f;
+            src.dopplerLevel = 0f;
+            src.volume = 0.9f;
+            tele.meow = src;
+        }
+
+        // ------------------------------------------------------------------ som: miado sintetizado
+
+        /// <summary>
+        /// Gera um miado por síntese aditiva ("mi-a-u"): o tom sobe e desce, os harmônicos passam por dois
+        /// formantes que vão de "i" para "a" e depois "u", com vibrato leve e um pouco de sopro. Sem licença de terceiros.
+        /// Para trocar por um miado gravado, substitua Audio/miado.wav (mesmo nome) ou o clip do AudioSource do gato.
+        /// </summary>
+        static AudioClip MeowClip()
+        {
+            string dir = Folder + "/Audio";
+            EnsureFolder(dir);
+            string path = dir + "/miado.wav";
+
+            const int sr = 44100;
+            const float dur = 0.8f;
+            int n = (int)(sr * dur);
+            var data = new float[n];
+            var rnd = new System.Random(11);
+            double phase = 0;
+
+            float Lerp3(float p, float a, float b, float c, float pb) =>
+                p < pb ? Mathf.Lerp(a, b, Mathf.SmoothStep(0f, 1f, p / pb)) : Mathf.Lerp(b, c, Mathf.SmoothStep(0f, 1f, (p - pb) / (1f - pb)));
+            float Formant(float f, float center, float bw) { float x = (f - center) / bw; return Mathf.Exp(-x * x); }
+
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / sr, p = t / dur;
+                float f0 = p < 0.2f ? Mathf.Lerp(520f, 820f, Mathf.SmoothStep(0f, 1f, p / 0.2f))
+                         : p < 0.55f ? Mathf.Lerp(820f, 760f, (p - 0.2f) / 0.35f)
+                         : Mathf.Lerp(760f, 430f, Mathf.SmoothStep(0f, 1f, (p - 0.55f) / 0.45f));
+                f0 *= 1f + 0.012f * Mathf.Sin(2f * Mathf.PI * 5.5f * t);
+                phase += 2.0 * Mathf.PI * f0 / sr;
+
+                float f1 = Lerp3(p, 350f, 900f, 450f, 0.35f);
+                float f2 = Lerp3(p, 2200f, 1400f, 900f, 0.35f);
+
+                float s = 0f;
+                for (int k = 1; k <= 14; k++)
+                {
+                    float fk = k * f0;
+                    if (fk > 8000f) break;
+                    float amp = (Formant(fk, f1, 200f) + 0.7f * Formant(fk, f2, 280f) + 0.04f) / Mathf.Pow(k, 0.6f);
+                    s += amp * (float)System.Math.Sin(k * phase);
+                }
+
+                float attack = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / 0.045f));
+                float release = p > 0.68f ? Mathf.Cos((p - 0.68f) / 0.32f * Mathf.PI * 0.5f) : 1f;
+                float env = attack * release;
+                float breath = ((float)rnd.NextDouble() * 2f - 1f) * 0.03f;
+                data[i] = (s + breath) * env;
+            }
+
+            float peak = 0.0001f;
+            foreach (var v in data) peak = Mathf.Max(peak, Mathf.Abs(v));
+            for (int i = 0; i < n; i++) data[i] = data[i] / peak * 0.8f;
+
+            WriteWav(path, data, sr);
+            AssetDatabase.ImportAsset(path);
+            return AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+        }
+
+        static void WriteWav(string path, float[] samples, int sampleRate)
+        {
+            using var fs = new FileStream(path, FileMode.Create);
+            using var w = new BinaryWriter(fs);
+            int bytes = samples.Length * 2;
+            w.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"));
+            w.Write(36 + bytes);
+            w.Write(System.Text.Encoding.ASCII.GetBytes("WAVE"));
+            w.Write(System.Text.Encoding.ASCII.GetBytes("fmt "));
+            w.Write(16);
+            w.Write((short)1);          // PCM
+            w.Write((short)1);          // mono
+            w.Write(sampleRate);
+            w.Write(sampleRate * 2);    // bytes por segundo
+            w.Write((short)2);          // bytes por amostra
+            w.Write((short)16);         // bits
+            w.Write(System.Text.Encoding.ASCII.GetBytes("data"));
+            w.Write(bytes);
+            foreach (var s in samples) w.Write((short)Mathf.Clamp(s * 32767f, -32768f, 32767f));
         }
 
         // ------------------------------------------------------------------ prévias

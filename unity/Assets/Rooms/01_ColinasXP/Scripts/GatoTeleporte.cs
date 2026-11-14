@@ -41,8 +41,15 @@ namespace Somnium.Rooms
         [Tooltip("Pote de ração que aparece ao lado do gato quando ele é alimentado.")]
         public Transform bowl;
 
-        [Header("Som (opcional)")]
+        [Header("Som")]
+        [Tooltip("Miado (som 3D: vem da direção do gato). Toca ao piscar e de tempos em tempos.")]
         public AudioSource meow;
+        [Tooltip("Intervalo aleatório entre miados espontâneos, em segundos. Para de miar depois de alimentado.")]
+        public Vector2 meowInterval = new Vector2(8f, 15f);
+        [Tooltip("Variação de tom a cada miado (1 = original).")]
+        public Vector2 meowPitch = new Vector2(0.88f, 1.15f);
+
+        float nextMeow;
 
         Transform player;
         Vector3 baseScale;
@@ -75,6 +82,13 @@ namespace Somnium.Rooms
 
             FacePlayer(Time.deltaTime * 4f);
 
+            bool fed = feedLock != null && feedLock.IsUnlocked;
+            if (!fed && !GameState.InMenu && Time.time >= nextMeow)
+            {
+                if (nextMeow > 0f) Meow(); // o primeiro só agenda (não mia no frame em que a sala abre)
+                nextMeow = Time.time + Random.Range(meowInterval.x, meowInterval.y);
+            }
+
             if (blinking || IsCalm || GameState.InMenu || RoomTransition.InProgress) return;
             if (FlatDistance(transform.position, player.position) < triggerDistance)
                 StartCoroutine(Blink());
@@ -83,7 +97,7 @@ namespace Somnium.Rooms
         IEnumerator Blink()
         {
             blinking = true;
-            if (meow != null) meow.Play();
+            Meow();
 
             yield return Scale(1f, 0f);
             transform.position = PickDestination();
@@ -91,6 +105,14 @@ namespace Somnium.Rooms
             yield return Scale(0f, 1f);
 
             blinking = false;
+        }
+
+        void Meow()
+        {
+            if (meow == null || meow.clip == null) return;
+            meow.pitch = Random.Range(meowPitch.x, meowPitch.y);
+            meow.Play();
+            nextMeow = Time.time + Random.Range(meowInterval.x, meowInterval.y);
         }
 
         IEnumerator Scale(float from, float to)

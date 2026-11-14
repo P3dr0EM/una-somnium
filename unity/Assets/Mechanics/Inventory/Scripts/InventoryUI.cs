@@ -165,6 +165,9 @@ namespace Somnium.Items
         {
             var rootGo = new GameObject("[InventoryRoot]");
             rootGo.layer = UIFactory.UILayer;
+            // Objetos criados sem pai nascem na cena ATIVA (a sala). Ao trocar de sala ela é descarregada e levaria
+            // a UI junto (MissingReferenceException). Fica na mesma cena do Player (persistencia).
+            UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(rootGo, gameObject.scene);
             root = rootGo.transform;
 
             canvas = UIFactory.CreateWorldCanvas("InventoryCanvas", root, panelDistance, new Vector2(1000f, 640f), UIFactory.UILayer);

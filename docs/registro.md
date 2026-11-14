@@ -118,3 +118,17 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 ### Outros
 - `pote_de_racao.blend` (em `models/`) ainda tem 3 variações lado a lado, com ~2 m. Por isso o pote do blockout é de blocos.
 - O `.blend` dos modelos não foi tocado. `Galão`, `escrivaninha` e `estatua` têm alterações locais do grupo, fora deste commit.
+
+### Teste do P3DR0EM na Colinas XP e ajustes
+- **Retorno:**
+  - campo aberto muito confortável em VR;
+  - tamanho do gato bom; manivela com boa dificuldade;
+  - transição e desempenho no PC ideais.
+- **Bug corrigido:** ao voltar a uma sala, o inventário aparecia vazio e o Console mostrava `MissingReferenceException ... Image`.
+  - Causa: a raiz da UI do inventário era criada sem pai, ou seja, na **cena ativa** (a sala), e era destruída quando a sala era descarregada. Os itens nunca se perderam.
+  - Correção: `InventoryUI` move a raiz para a cena do Player (`persistencia`).
+  - Regra: **objeto criado em tempo de execução precisa de pai, ou ir para a cena da persistencia, ou ser `DontDestroyOnLoad`**.
+- **Gato:** agora **preto, com coleira azul**. Contraste forte com o verde e combinação legível nos tipos comuns de daltonismo; o laranja se confundia com o verde.
+- **Miado** sintetizado por código (`Rooms/01_ColinasXP/Audio/miado.wav`, sem licença de terceiros), em **som 3D** (vem da direção do gato):
+  - toca quando o gato pisca e a cada 8 a 15 s, com o tom variando;
+  - para depois de alimentado.
