@@ -83,3 +83,19 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 ### Teste do P3DR0EM e ajuste da escada
 - Teste no PC: tudo funcionou (estátua, chaves, final com recomeço, luz e ambientação). Console sem erros.
 - A subida da escada estava aos trancos (o jogador "pulava" degrau por degrau pelo `stepOffset`). Correção: os degraus viraram só visuais e cada escada ganhou uma **rampa invisível** (`Rampa_Colisao`, ~38,7°, abaixo do `slopeLimit` de 45°) passando pelas quinas dos degraus. O último degrau mantém a colisão para emendar com o mezanino.
+
+### Fechamento do dia
+- **PR #2 aceito** (merge `b9b0b05`): Saguão, final do jogo e `.gitattributes` na `main`.
+- Atribuição automática do Claude nos commits/PRs **desligada** (configuração local do P3DR0EM).
+- **Planejamento até a apresentação de 23/11** e redução de escopo (ver `decisoes.md`, 2026-11-12):
+  - Sala das Piscinas descartada.
+  - Fluxo enxuto com 4 salas e 4 chaves.
+  - Conceito novo da Colinas XP (porta isolada no campo).
+  - Gato que se teletransporta.
+- Mensagem com o status e a lista de modelos por prioridade enviada ao grupo.
+
+## 2026-11-14
+
+### Início
+- Sincronizado com o Caio: nada novo. Branch **`feature/colinas-xp`** criada a partir da `main`.
+- A sessão de sexta (13) não aconteceu; cronograma ajustado (ver "Cronograma até a apresentação" em `decisoes.md`).
