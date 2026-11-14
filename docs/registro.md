@@ -99,3 +99,22 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 ### Início
 - Sincronizado com o Caio: nada novo. Branch **`feature/colinas-xp`** criada a partir da `main`.
 - A sessão de sexta (13) não aconteceu; cronograma ajustado (ver "Cronograma até a apresentação" em `decisoes.md`).
+
+### Colinas XP (blockout jogável)
+- Gerador `Rooms/01_ColinasXP/Editor/ColinasBuilder.cs`, com os menus **Somnium → Salas → Abrir Colinas XP / Gerar blockout / Renderizar prévias**.
+- Cena `Rooms/01_ColinasXP/colinas_xp.unity` (em x = 2000):
+  - campo de colinas gerado por código (360 × 360 m, ~16 mil triângulos), plano perto da porta e com bordas que sobem para fechar o horizonte;
+  - textura de grama estilizada e tufos 3D só num raio de 16 m (uma malha só, ~4 mil triângulos);
+  - céu panorâmico próprio com nuvens paradas, neblina azul-clara e sol com sombra.
+- **Porta**: a do Caio, tirada do prefab do portal (folha fechada e pintada de branco), com tijolos e hera. Interagir leva de volta ao Saguão.
+- **Gato**: modelo low poly sentado (CC BY), com coleira e chave. Se teletransporta (`GatoTeleporte`); com a Lata de Ração, "Dar ração" entrega a Chave 1 e a Metade do Medalhão e o pote aparece.
+- **Manivela Quadrada** numa moita atrás da porta, com um brilho que pisca.
+- Limite invisível a 46 m da porta.
+
+### Passagem entre salas
+- Novos `RoomTransition` e `RoomDoor`; `PlayerSpawnPoint` ganhou `id` e `placeOnStart`.
+- No Saguão, a porta "Colinas XP" agora funciona. Há um ponto de chegada na volta e a Porta Principal passou para **4 fechaduras** (fluxo enxuto); o bilhete fala em "quatro portas, quatro chaves".
+
+### Outros
+- `pote_de_racao.blend` (em `models/`) ainda tem 3 variações lado a lado, com ~2 m. Por isso o pote do blockout é de blocos.
+- O `.blend` dos modelos não foi tocado. `Galão`, `escrivaninha` e `estatua` têm alterações locais do grupo, fora deste commit.

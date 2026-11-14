@@ -22,7 +22,10 @@ namespace Somnium.EditorTools.Rooms
     public static class SaguaoBuilder
     {
         const string Folder = "Assets/Rooms/00_Saguao";
-        const string ScenePath = Folder + "/saguao.unity";
+        public const string ScenePath = Folder + "/saguao.unity";
+        /// <summary>Id do ponto onde o jogador aparece ao voltar da Colinas XP.</summary>
+        public const string SpawnFromColinas = "de_colinas";
+        const int MainLocks = 4; // fluxo enxuto (opção B): 4 chaves
         const string MatFolder = Folder + "/Materials";
         const string PersistenciaPath = "Assets/Scenes/persistencia.unity";
         const string ItemsFolder = "Assets/Data/Items";
@@ -326,12 +329,12 @@ namespace Somnium.EditorTools.Rooms
                 doors.Add(door);
             }
 
-            // Coluna com 5 fechaduras na borda da folha esquerda (gira junto) + as chaves que aparecem ao inserir.
+            // Coluna com as fechaduras na borda da folha esquerda (gira junto) + as chaves que aparecem ao inserir.
             var locks = Child(doors[0].transform, "Fechaduras", new Vector3(MainDoorHalfW - 0.14f, 0f, 0f));
             var inserted = new List<GameObject>();
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < MainLocks; i++)
             {
-                float y = 0.95f + i * 0.28f;
+                float y = 1.0f + i * 0.32f;
                 var plate = Box(locks, $"Fechadura_{i + 1}", new Vector3(0f, y, -0.07f), new Vector3(0.14f, 0.18f, 0.04f), iron);
                 Object.DestroyImmediate(plate.GetComponent<Collider>());
                 var key = Box(locks, $"ChaveInserida_{i + 1}", new Vector3(0f, y, -0.12f), new Vector3(0.05f, 0.12f, 0.08f), gold);
@@ -346,10 +349,10 @@ namespace Somnium.EditorTools.Rooms
             Object.DestroyImmediate(area.GetComponent<MeshFilter>());
             area.GetComponent<BoxCollider>().isTrigger = true;
             var lockComp = area.AddComponent<ItemLock>();
-            lockComp.requiredItems = new List<ItemData> { Item("Chave1"), Item("Chave2"), Item("Chave3"), Item("Chave4"), Item("Chave5") };
+            lockComp.requiredItems = new List<ItemData> { Item("Chave1"), Item("Chave2"), Item("Chave3"), Item("Chave4") };
             lockComp.acceptPartial = true;
             lockComp.consumeItems = true;
-            lockComp.lockedMessage = "A porta principal tem cinco fechaduras.";
+            lockComp.lockedMessage = "A porta principal tem quatro fechaduras.";
             lockComp.unlockedMessage = "A última chave gira. A porta se abre...";
             lockComp.saveId = "saguao/porta_principal";
             SetPrompt(lockComp, "Examinar a porta principal");
@@ -455,9 +458,26 @@ namespace Somnium.EditorTools.Rooms
                 Box(d, "Batente_B", new Vector3(SideDoorHalfW + 0.07f, SideDoorH / 2f, -0.02f), new Vector3(0.14f, SideDoorH, 0.1f), wood);
                 Box(d, "Batente_Topo", new Vector3(0f, SideDoorH + 0.07f, -0.02f), new Vector3(SideDoorHalfW * 2f + 0.28f, 0.14f, 0.1f), wood);
                 var leaf = Box(d, "Folha", new Vector3(0f, SideDoorH / 2f, 0.1f), new Vector3(SideDoorHalfW * 2f, SideDoorH, 0.08f), door);
-                var msg = leaf.AddComponent<MessageInteractable>();
-                msg.message = $"A porta para {label} está trancada.\n(Sala ainda em construção.)";
-                SetPrompt(msg, $"Abrir: {label}");
+                if (id == "ColinasXP")
+                {
+                    var roomDoor = leaf.AddComponent<RoomDoor>();
+                    roomDoor.targetScenePath = ColinasBuilder.ScenePath;
+                    roomDoor.spawnId = "inicio";
+                    SetPrompt(roomDoor, $"Entrar: {label}");
+
+                    // Ponto de chegada ao voltar: na frente da porta, virado para dentro do hall.
+                    var back = Child(d, "Spawn_DeColinas", new Vector3(0f, 0f, -1.3f));
+                    back.localRotation = Quaternion.Euler(0f, 180f, 0f);
+                    var sp = back.gameObject.AddComponent<PlayerSpawnPoint>();
+                    sp.id = SpawnFromColinas;
+                    sp.placeOnStart = false;
+                }
+                else
+                {
+                    var msg = leaf.AddComponent<MessageInteractable>();
+                    msg.message = $"A porta para {label} está trancada.\n(Sala ainda em construção.)";
+                    SetPrompt(msg, $"Abrir: {label}");
+                }
 
                 // Placa com o nome da sala.
                 var sign = Box(d, "Placa", new Vector3(0f, SideDoorH + 0.45f, -0.03f), new Vector3(1.3f, 0.3f, 0.04f), board);
@@ -583,7 +603,7 @@ namespace Somnium.EditorTools.Rooms
             var note = Box(g, "Bilhete", new Vector3(-4.2f, 0.505f, -HalfD + 0.45f), new Vector3(0.21f, 0.005f, 0.3f), Mat("Saguao_Papel", new Color(0.85f, 0.82f, 0.7f), 0.1f));
             note.GetComponent<BoxCollider>().size = new Vector3(1f, 30f, 1f);
             var msg = note.AddComponent<MessageInteractable>();
-            msg.message = "\"Cinco portas, cinco chaves. Quem sonha não sai pela porta da frente sem todas elas.\"";
+            msg.message = "\"Quatro portas, quatro chaves. Quem sonha não sai pela porta da frente sem todas elas.\"";
             msg.duration = 6f;
             SetPrompt(msg, "Ler bilhete");
         }
