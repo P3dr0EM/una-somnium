@@ -305,10 +305,12 @@ namespace Somnium.EditorTools.Rooms
             // Nicho embaixo do piso.
             var pit = RoomKit.Child(g, "Nicho", Vector3.zero);
             RoomKit.Box(pit, "Fundo", new Vector3(0f, -PitDepth - 0.05f, zc), new Vector3(1f, 0.1f, 1f), pitMat).layer = groundLayer;
-            RoomKit.Box(pit, "Lado_Esq", new Vector3(-HatchHalf - 0.025f, -PitDepth / 2f, zc), new Vector3(0.05f, PitDepth, 1.1f), pitMat);
-            RoomKit.Box(pit, "Lado_Dir", new Vector3(HatchHalf + 0.025f, -PitDepth / 2f, zc), new Vector3(0.05f, PitDepth, 1.1f), pitMat);
-            RoomKit.Box(pit, "Lado_Frente", new Vector3(0f, -PitDepth / 2f, HatchZ0 - 0.025f), new Vector3(1f, PitDepth, 0.05f), pitMat);
-            RoomKit.Box(pit, "Lado_Fundo", new Vector3(0f, -PitDepth / 2f, HatchZ1 + 0.025f), new Vector3(1f, PitDepth, 0.05f), pitMat);
+            // Paredes do nicho terminam 1 cm abaixo do piso: topo na mesma altura do piso dava z-fighting (borda serrilhada).
+            const float WallH = PitDepth - 0.01f, WallY = -0.01f - WallH / 2f;
+            RoomKit.Box(pit, "Lado_Esq", new Vector3(-HatchHalf - 0.025f, WallY, zc), new Vector3(0.05f, WallH, 1.1f), pitMat);
+            RoomKit.Box(pit, "Lado_Dir", new Vector3(HatchHalf + 0.025f, WallY, zc), new Vector3(0.05f, WallH, 1.1f), pitMat);
+            RoomKit.Box(pit, "Lado_Frente", new Vector3(0f, WallY, HatchZ0 - 0.025f), new Vector3(1f, WallH, 0.05f), pitMat);
+            RoomKit.Box(pit, "Lado_Fundo", new Vector3(0f, WallY, HatchZ1 + 0.025f), new Vector3(1f, WallH, 0.05f), pitMat);
             // Grade invisível sobre o buraco: o jogador não cai lá dentro (layer Ignore Raycast: a mira passa).
             var guard = RoomKit.Volume(pit, "Grade_Invisivel", new Vector3(0f, -0.05f, zc), new Vector3(1f, 0.1f, 1f), false);
             guard.layer = 2;

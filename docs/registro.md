@@ -155,3 +155,4 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 - `GirarAoAtivar` e `LuzPiscando`.
 - `PlayerInteractor`: gatilhos que não aceitam interação (ex.: trava já aberta) não bloqueiam mais a mira.
 - Debug: **Receber Alicate e Cartucho Vazio**.
+- **Correção visual:** borda do alçapão "serrilhada" (z-fighting). O topo das paredes do nicho ficava na mesma altura do piso; agora termina 1 cm abaixo.
