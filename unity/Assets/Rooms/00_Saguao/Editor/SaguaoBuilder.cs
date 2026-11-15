@@ -25,6 +25,14 @@ namespace Somnium.EditorTools.Rooms
         public const string ScenePath = Folder + "/saguao.unity";
         /// <summary>Id do ponto onde o jogador aparece ao voltar da Colinas XP.</summary>
         public const string SpawnFromColinas = "de_colinas";
+        public const string SpawnFromEscritorio = "de_escritorio";
+
+        /// <summary>Salas já prontas: id da porta → (cena da sala, id do ponto de chegada aqui ao voltar). As outras portas ficam trancadas.</summary>
+        static readonly Dictionary<string, (string scene, string spawnBack)> RoomLinks = new Dictionary<string, (string, string)>
+        {
+            { "ColinasXP", (ColinasBuilder.ScenePath, SpawnFromColinas) },
+            { "EscritorioAzul", (EscritorioBuilder.ScenePath, SpawnFromEscritorio) },
+        };
         const int MainLocks = 4; // fluxo enxuto (opção B): 4 chaves
         const string MatFolder = Folder + "/Materials";
         const string PersistenciaPath = "Assets/Scenes/persistencia.unity";
@@ -458,18 +466,18 @@ namespace Somnium.EditorTools.Rooms
                 Box(d, "Batente_B", new Vector3(SideDoorHalfW + 0.07f, SideDoorH / 2f, -0.02f), new Vector3(0.14f, SideDoorH, 0.1f), wood);
                 Box(d, "Batente_Topo", new Vector3(0f, SideDoorH + 0.07f, -0.02f), new Vector3(SideDoorHalfW * 2f + 0.28f, 0.14f, 0.1f), wood);
                 var leaf = Box(d, "Folha", new Vector3(0f, SideDoorH / 2f, 0.1f), new Vector3(SideDoorHalfW * 2f, SideDoorH, 0.08f), door);
-                if (id == "ColinasXP")
+                if (RoomLinks.TryGetValue(id, out var link))
                 {
                     var roomDoor = leaf.AddComponent<RoomDoor>();
-                    roomDoor.targetScenePath = ColinasBuilder.ScenePath;
+                    roomDoor.targetScenePath = link.scene;
                     roomDoor.spawnId = "inicio";
                     SetPrompt(roomDoor, $"Entrar: {label}");
 
                     // Ponto de chegada ao voltar: na frente da porta, virado para dentro do hall.
-                    var back = Child(d, "Spawn_DeColinas", new Vector3(0f, 0f, -1.3f));
+                    var back = Child(d, $"Spawn_De{id}", new Vector3(0f, 0f, -1.3f));
                     back.localRotation = Quaternion.Euler(0f, 180f, 0f);
                     var sp = back.gameObject.AddComponent<PlayerSpawnPoint>();
-                    sp.id = SpawnFromColinas;
+                    sp.id = link.spawnBack;
                     sp.placeOnStart = false;
                 }
                 else

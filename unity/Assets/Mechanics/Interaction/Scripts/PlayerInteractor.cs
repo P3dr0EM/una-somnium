@@ -72,7 +72,8 @@ namespace Somnium.Interaction
                 if (col.transform.IsChildOf(transform)) continue; // o próprio corpo do jogador
 
                 var candidate = col.GetComponentInParent<Interactable>();
-                if (col.isTrigger && candidate == null) continue; // volumes de gatilho (ScenePartLoader etc.)
+                // Volumes de gatilho (ScenePartLoader etc.) e gatilhos já usados (ex.: trava do alçapão aberta) não bloqueiam a mira.
+                if (col.isTrigger && (candidate == null || !candidate.CanInteract)) continue;
 
                 if (hits[i].distance < best)
                 {

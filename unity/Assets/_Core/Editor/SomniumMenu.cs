@@ -76,6 +76,9 @@ namespace Somnium.EditorTools
         [MenuItem("Somnium/Debug/Receber Lata de Ração (testar o gato)")]
         static void GiveFood() => GiveItems("LataDeRacao");
 
+        [MenuItem("Somnium/Debug/Receber Alicate e Cartucho Vazio (testar o Escritório)")]
+        static void GiveOfficeTools() => GiveItems("Alicate", "CartuchoVazio");
+
         [MenuItem("Somnium/Debug/Receber todos os itens do roteiro")]
         static void GiveAll()
         {
@@ -94,6 +97,7 @@ namespace Somnium.EditorTools
 
         [MenuItem("Somnium/Debug/Receber chaves 1-2-3 e o medalhão (a 4 vem da estátua)", true)]
         [MenuItem("Somnium/Debug/Receber Lata de Ração (testar o gato)", true)]
+        [MenuItem("Somnium/Debug/Receber Alicate e Cartucho Vazio (testar o Escritório)", true)]
         [MenuItem("Somnium/Debug/Receber todos os itens do roteiro", true)]
         [MenuItem("Somnium/Debug/Limpar inventário e estado do mundo", true)]
         static bool IsPlaying() => EditorApplication.isPlaying;

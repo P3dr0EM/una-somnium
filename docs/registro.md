@@ -132,3 +132,26 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 - **Miado** sintetizado por código (`Rooms/01_ColinasXP/Audio/miado.wav`, sem licença de terceiros), em **som 3D** (vem da direção do gato):
   - toca quando o gato pisca e a cada 8 a 15 s, com o tom variando;
   - para depois de alimentado.
+- **PR #3 aceito** (merge `cc43f17`): Colinas XP na `main`.
+
+## 2026-11-14 (noite)
+
+### Escritório Azul (blockout jogável)
+- Branch **`feature/escritorio-azul`**. Gerador `Rooms/02_EscritorioAzul/Editor/EscritorioBuilder.cs`, com os menus **Somnium → Salas → Abrir / Gerar blockout / Renderizar prévias do Escritório Azul**.
+- Cena `Rooms/02_EscritorioAzul/escritorio_azul.unity` (em x = 3000): "arquivo liminar" de 12 × 22 m e pé-direito de 3 m, tudo em azul.
+  - 6 fileiras de arquivos de metal formando corredores (uma malha de 6 arquivos reaproveitada, ~15 mil triângulos no total).
+  - Mesas e cadeiras (**modelos do grupo**: `escrivaninha.blend` e `cadeira.blend`, exportados para FBX sem alterar os `.blend`), máquinas de escrever.
+  - Luz fluorescente fria (11 pontos, sem sombra) e **uma lâmpada piscando** (`LuzPiscando`).
+- **Alçapão**:
+  - O Alicate corta a corrente e a tampa abre (`GirarAoAtivar`).
+  - No nicho estão a **Chave 2** (com brilho) e a **Lata de Ração**.
+  - Uma grade invisível (layer Ignore Raycast) impede o jogador de cair no nicho sem bloquear a mira.
+- **Almoxarifado**: armário com duas portas (`Itr_Door` do Caio), com o **galão de ácido** (modelo do grupo `Galão.blend`) e rótulo amarelo "PERIGO ÁCIDO". Cartucho Vazio vira **Herbicida**.
+- **Memorando** numa mesa com a pista do alçapão.
+- Saguão: a porta "Escritório Azul" agora leva à sala (tabela `RoomLinks` no `SaguaoBuilder`).
+
+### Sistemas novos ou alterados
+- `RoomKit` (`_Core/Editor`): funções comuns dos geradores de sala (blocos, materiais, modelos com escala automática, piso com UV em metros, textos, prévias).
+- `GirarAoAtivar` e `LuzPiscando`.
+- `PlayerInteractor`: gatilhos que não aceitam interação (ex.: trava já aberta) não bloqueiam mais a mira.
+- Debug: **Receber Alicate e Cartucho Vazio**.
