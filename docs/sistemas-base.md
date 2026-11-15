@@ -113,3 +113,19 @@ Para lembrar o estado entre recargas da sala, use `WorldState.Has/Set` com `Worl
 - **Saguão → Colinas XP**: a porta "Colinas XP" (`RoomDoor`) leva ao spawn `inicio` da Colinas.
 - **Colinas XP → Saguão**: a porta no meio do campo leva ao spawn `de_colinas`, na frente da porta da Colinas, virado para o hall.
 - Nova sala: crie um `PlayerSpawnPoint` com id próprio ao lado da porta de volta e um `RoomDoor` apontando para a cena.
+
+## Adicionados em 2026-11-14 (noite)
+
+| Componente | Onde | Uso |
+|---|---|---|
+| `GirarAoAtivar` | `Mechanics/Interaction/Scripts` | Gira o objeto até **Open Local Euler** (ex.: tampa do alçapão). Ligue `Play()` no "On Unlocked" de um `ItemLock` e `SnapOpen()` no "On Restored Unlocked". |
+| `LuzPiscando` | `Mechanics/Ambiente/Scripts` | Lâmpada com defeito: pisca algumas vezes de tempos em tempos (Light + material do painel aceso/apagado). |
+| `RoomKit` | `_Core/Editor` | Base para novos geradores de sala: `Box`, `Model(caminho, ..., tamanho, porAltura)` (escala e assenta no chão), `FloorQuad` (piso com UV em metros), `Checker`, `SignText`, `Shooter` (prévias). |
+
+### Modelos do grupo no Unity
+- Os `.blend` ficam em `models/` e **não são alterados**. Para usar um, ele é exportado para `.fbx` na pasta `Models` da sala (Blender em segundo plano, com modificadores aplicados).
+- A escala é ajustada pelo gerador (`RoomKit.Model`): ex.: mesa com 0,76 m de altura, galão com 0,5 m.
+- Se o modelo mudar, exporte de novo e gere a sala de novo.
+
+### Mira
+- Gatilhos que **não aceitam interação** (ex.: uma trava já aberta) não bloqueiam mais a mira. Objetos no layer **Ignore Raycast** também não (ex.: a grade invisível do alçapão).

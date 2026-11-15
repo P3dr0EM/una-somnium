@@ -34,6 +34,10 @@ Registro das decisões tomadas sobre o roteiro (rascunho) e o projeto. Cada deci
 | 2026-11-12 | **Gato**: sem animação. Quando o jogador chega a ~3 m, ele **se teletransporta** ("pisca") para um ponto a até 30 m da porta, a pelo menos ~10 m do jogador e **dentro do campo de visão** dele. Com a Lata de Ração no inventário, ele fica parado; mirar mostra "Dar ração" e interagir entrega a **Chave 1** e a **Metade do Medalhão** (o pote de ração aparece ao lado dele). | Ideia do P3DR0EM: poupa a animação e combina com o clima de sonho; reaparecer à vista evita o jogador perder o gato. |
 | 2026-11-14 | Gato **preto com coleira azul** (contraste no campo, inclusive para daltonismo) e **miado 3D** a cada 8–15 s e ao piscar, para chamar a atenção e disputar o foco com a busca da Manivela. | Retorno do teste do P3DR0EM. |
 | 2026-11-12 | Modelo do gato: **low poly sentado** (428 triângulos, licença **CC BY**, crédito em `CREDITOS.md`). O projeto é **acadêmico, sem venda**. | Leve para o celular; a pose sentada combina com o teletransporte. |
+| 2026-11-14 | **Escritório Azul** como **arquivo liminar**: sala comprida com fileiras de arquivos formando corredores, luz fluorescente fria (uma lâmpada piscando), tudo em azul. O **alçapão** fica no fim do corredor central. | Escolha do P3DR0EM: clima de "Backrooms" de escritório. |
+| 2026-11-14 | O **galão de ácido** fica **dentro de um armário** (almoxarifado) que abre sem chave: "escondido" como no roteiro, mas sem novo puzzle. | Escolha do P3DR0EM. |
+| 2026-11-14 | O nicho do alçapão tem uma **grade invisível**: o jogador não cai lá dentro (e não fica preso), mas a mira alcança os itens. | Conforto e segurança: cair num buraco e não conseguir sair seria frustrante em VR. |
+| 2026-11-14 | **Modelos do grupo** entram por exportação para FBX, sem alterar os `.blend`. Mesa, cadeira e galão já estão no Escritório. | Usar a arte pronta cedo; o `.blend` continua sendo o arquivo de trabalho dos modeladores. |
 
 ### Fluxo de gameplay (opção B)
 1. Começa no **Saguão**, de frente para a Porta Principal (4 fechaduras).
