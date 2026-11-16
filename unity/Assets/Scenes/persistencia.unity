@@ -478,7 +478,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40c281d790033bf4eaecadbceea1ab64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelPersistencia
-  levelName: area_externa
+  levelName: saguao
 --- !u!4 &1184736729
 Transform:
   m_ObjectHideFlags: 0

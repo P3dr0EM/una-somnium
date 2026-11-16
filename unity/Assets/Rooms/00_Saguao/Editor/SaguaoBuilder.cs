@@ -178,6 +178,7 @@ namespace Somnium.EditorTools.Rooms
             BuildSideDoors();
             BuildLights();
             BuildDecor();
+            if (DemoTable) BuildDemoTable();
 
             var spawn = Child(root, "PlayerSpawn", new Vector3(0f, 0f, -6.8f));
             spawn.gameObject.AddComponent<PlayerSpawnPoint>();
@@ -568,6 +569,62 @@ namespace Somnium.EditorTools.Rooms
         }
 
         // ------------------------------------------------------------------ decoração (escala e clima)
+
+        // ------------------------------------------------------------------ mesa de demonstração (temporária)
+
+        /// <summary>
+        /// Liga a mesa com os itens das salas que ainda não existem (Salão Invertido e Estufa), para dar para jogar
+        /// o percurso inteiro na demonstração. Desligar (false) quando as salas reais estiverem prontas.
+        /// </summary>
+        const bool DemoTable = true;
+
+        static void BuildDemoTable()
+        {
+            var wood = Mat("Saguao_Madeira", new Color(0.22f, 0.13f, 0.07f), 0.35f);
+            var cloth = Mat("Saguao_ToalhaDemo", new Color(0.12f, 0.2f, 0.45f), 0.1f);
+            var gold = Mat("Saguao_Dourado", new Color(0.85f, 0.65f, 0.25f), 0.7f, 1f);
+            var book = Mat("Saguao_LivroDemo", new Color(0.35f, 0.08f, 0.08f), 0.3f);
+            var metal = Mat("Saguao_CartuchoDemo", new Color(0.7f, 0.72f, 0.75f), 0.6f, 0.8f);
+            var g = Child(root, "MesaDemonstracao", new Vector3(2f, 0f, -4.5f));
+            g.localRotation = Quaternion.Euler(0f, -40f, 0f); // virada para o spawn
+
+            const float top = 0.8f;
+            Box(g, "Tampo", new Vector3(0f, top - 0.03f, 0f), new Vector3(1.3f, 0.06f, 0.6f), wood);
+            var c = Box(g, "Toalha", new Vector3(0f, top + 0.003f, 0f), new Vector3(1.32f, 0.006f, 0.62f), cloth);
+            Object.DestroyImmediate(c.GetComponent<Collider>());
+            foreach (var p in new[] { new Vector3(-0.58f, 0f, -0.24f), new Vector3(0.58f, 0f, -0.24f), new Vector3(-0.58f, 0f, 0.24f), new Vector3(0.58f, 0f, 0.24f) })
+                Box(g, "Perna", p + new Vector3(0f, (top - 0.06f) / 2f, 0f), new Vector3(0.05f, top - 0.06f, 0.05f), wood);
+
+            // Placa em pé atrás dos itens.
+            var board = Box(g, "Placa", new Vector3(0f, top + 0.25f, 0.27f), new Vector3(1.1f, 0.42f, 0.03f), Mat("Saguao_Placa", new Color(0.08f, 0.06f, 0.05f), 0.3f));
+            Object.DestroyImmediate(board.GetComponent<Collider>());
+            RoomKit.SignText(g, "DEMONSTRAÇÃO\nitens das salas em construção", new Vector3(0f, top + 0.25f, 0.25f), new Vector2(1050f, 400f), 64, new Color(0.85f, 0.7f, 0.4f));
+
+            void Pickup(string id, string name, GameObject visual, Vector3 colliderSize)
+            {
+                visual.name = name;
+                var col = visual.GetComponent<Collider>();
+                if (col != null) Object.DestroyImmediate(col);
+                var bc = visual.AddComponent<BoxCollider>();
+                var s = visual.transform.localScale;
+                bc.size = new Vector3(colliderSize.x / s.x, colliderSize.y / s.y, colliderSize.z / s.z);
+                bc.isTrigger = true;
+                var pick = visual.AddComponent<ItemPickup>();
+                pick.item = Item(id);
+                pick.saveId = "demo/" + id;
+            }
+
+            // Livro Antigo (Salão Invertido): inspecionar no inventário revela o Alicate.
+            Pickup("LivroAntigo", "Pickup_LivroAntigo", Box(g, "x", new Vector3(-0.42f, top + 0.035f, -0.05f), new Vector3(0.2f, 0.06f, 0.28f), book), new Vector3(0.3f, 0.25f, 0.35f));
+            // Cartucho Vazio, Metade B do Medalhão e Chave 3 (Estufa).
+            var cart = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            Place(cart, g, "x", new Vector3(-0.1f, top + 0.08f, -0.05f), new Vector3(0.08f, 0.08f, 0.08f), metal);
+            Pickup("CartuchoVazio", "Pickup_CartuchoVazio", cart, new Vector3(0.25f, 0.3f, 0.25f));
+            var half = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            Place(half, g, "x", new Vector3(0.18f, top + 0.01f, -0.05f), new Vector3(0.14f, 0.008f, 0.14f), gold);
+            Pickup("MedalhaoMetadeB", "Pickup_MetadeB", half, new Vector3(0.22f, 0.2f, 0.22f));
+            Pickup("Chave3", "Pickup_Chave3", Box(g, "x", new Vector3(0.44f, top + 0.015f, -0.05f), new Vector3(0.18f, 0.03f, 0.06f), gold), new Vector3(0.28f, 0.2f, 0.25f));
+        }
 
         static void BuildDecor()
         {

@@ -156,3 +156,28 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 - `PlayerInteractor`: gatilhos que não aceitam interação (ex.: trava já aberta) não bloqueiam mais a mira.
 - Debug: **Receber Alicate e Cartucho Vazio**.
 - **Correção visual:** borda do alçapão "serrilhada" (z-fighting). O topo das paredes do nicho ficava na mesma altura do piso; agora termina 1 cm abaixo.
+- **PR #4 aceito** (merge `a85aeb7`): Escritório Azul na `main`.
+
+## 2026-11-15
+
+### Versão de demonstração (APK + PC) para mostrar em aula
+- Branch **`feature/demo-apk`**.
+- **Início no Saguão** (P9, por enquanto): a `persistencia` carrega o `saguao` em vez da `area_externa`.
+  - O `LevelPersistencia` (do Caio) só carrega a sala inicial quando a `persistencia` está sozinha. No editor, qualquer cena aberta junto (uma sala ou a `area_externa`) é respeitada.
+- **Mesa de demonstração** no Saguão, à direita do início, com os itens das salas que ainda não existem:
+  - Livro Antigo (a inspeção 3D revela o Alicate);
+  - Cartucho Vazio, Metade B do Medalhão e Chave 3.
+  - Dá para jogar o percurso inteiro até o final. Desligar com `DemoTable = false` no `SaguaoBuilder` quando as salas existirem.
+- **Builds**: menu **Somnium → Build** (`SomniumBuild.cs`), saída em `D:\Projetos\Somnium\Claude\builds`.
+  - PC: `PC\Somnium.exe` (111 MB).
+  - Android: `Android\Somnium.apk` (58 MB, IL2CPP, ARMv7 + ARM64, Cardboard).
+- Roteiro da apresentação: `docs/guias/demo-apresentacao.md`.
+
+### Problemas do build Android e soluções
+1. **Build interrompido no meio do Gradle** (a sessão caiu). O cache do Gradle ficou corrompido.
+2. **"Using different versions of the Android Gradle plugin (UNKNOWN_VERSION, UNKNOWN_VERSION)"**: persistiu mesmo com o cache apagado.
+   - Um projeto Android mínimo reproduziu o erro com a pasta do Gradle da máquina e funcionou com uma pasta nova. A causa está na pasta pessoal do Gradle (`D:\Unity\Cache\gradle`, compartilhada com o Flutter), e não no projeto.
+   - Solução: pasta do Gradle nova. A antiga ficou em `D:\Unity\Cache\gradle_bak_20261115` (pode ser apagada).
+3. **"resource style/Theme.AppCompat.NoActionBar not found"** (Cardboard). Os templates de Gradle (`mainTemplate.gradle`, com as dependências do Cardboard: appcompat, play-services-vision, material, protobuf) tinham ido parar em `Assets/extras/Plugins/Android` na reorganização de pastas.
+   - O Unity só lê templates em **`Assets/Plugins/Android`**. Os arquivos voltaram para lá.
+4. Os builds alteram sozinhos `ProjectSettings` e os assets do URP (XR nos "preloaded assets", filtros de shader). Essas mudanças foram descartadas.
