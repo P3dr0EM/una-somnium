@@ -1,3 +1,5 @@
+| 2026-11-15 | **Demonstração em aula**: o jogo começa no **Saguão** e uma **mesa de demonstração** entrega os itens das salas que faltam (Livro Antigo, Cartucho Vazio, Metade B, Chave 3), para dar para jogar até o final. Versões **APK** (Cardboard) e **PC** (projetor). | Mostrar o percurso completo antes de todas as salas existirem. |
+| 2026-11-15 | Templates de Gradle do Android voltam para **`Assets/Plugins/Android`** (o Unity não os encontra em outra pasta). Não mover essa pasta na reorganização (P4). | Sem eles o Cardboard não compila (faltam as dependências). |
 # Somnium: decisões e pendências
 
 Registro das decisões tomadas sobre o roteiro (rascunho) e o projeto. Cada decisão tem data e motivo. Pendências ficam no fim, com dono e o que destrava cada uma.
@@ -89,7 +91,7 @@ Revisto em 2026-11-14 porque a sessão de sexta (13) não aconteceu. O domingo, 
 | P6 | **"Enter Play Mode Options" com o domínio sem recarregar** está ligado no projeto (Play mais rápido). Os sistemas novos já tratam isso; ficar atento a estados que "vazam" de um Play para outro. | Todos | (vigilância) |
 | P7 | Testar no **celular com Cardboard + gamepad** (inventário em VR, snap turn, legibilidade dos textos). | P3DR0EM | Validar a experiência em VR. |
 | P8 | Ajustes de sensação do teste no PC (velocidade, alcance, textos). Nada reportado ainda. | P3DR0EM | Ajuste fino. |
-| P9 | **Como o jogador chega ao Saguão?** Hoje ele é testado sozinho (spawn próprio). Opções: o `LevelPersistencia` carregar o Saguão como sala inicial, ou um portal/porta da área externa levar até ele. | P3DR0EM + Caio | Fluxo do jogo de ponta a ponta. |
+| P9 | **Como o jogador chega ao Saguão?** Desde 2026-11-15 o jogo **começa no Saguão** (a `persistencia` carrega o `saguao`). Falta decidir com o Caio se a `area_externa` entra antes (porta ou portal levando ao Saguão). | P3DR0EM + Caio | Fluxo final do jogo. |
 | P10 | **Arte final do Saguão**: trocar os blocos por modelos (estátua: há um `estatua.blend` em `models/`), texturas de papel de parede e madeira, iluminação baked para o celular. | P3DR0EM + Caio | Visual final. |
 | P11 | **Crédito do gato (CC BY)**: preencher autor e link em `CREDITOS.md`. | P3DR0EM | Cumprir a licença. |
 | P12 | **Porta da Colinas XP como portal** (ver o Saguão através dela). Depende da P2. | Caio | Efeito "Suzume" completo. |
