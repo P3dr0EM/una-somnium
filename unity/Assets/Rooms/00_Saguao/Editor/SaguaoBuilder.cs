@@ -26,12 +26,14 @@ namespace Somnium.EditorTools.Rooms
         /// <summary>Id do ponto onde o jogador aparece ao voltar da Colinas XP.</summary>
         public const string SpawnFromColinas = "de_colinas";
         public const string SpawnFromEscritorio = "de_escritorio";
+        public const string SpawnFromSalao = "de_salao";
 
         /// <summary>Salas já prontas: id da porta → (cena da sala, id do ponto de chegada aqui ao voltar). As outras portas ficam trancadas.</summary>
         static readonly Dictionary<string, (string scene, string spawnBack)> RoomLinks = new Dictionary<string, (string, string)>
         {
             { "ColinasXP", (ColinasBuilder.ScenePath, SpawnFromColinas) },
             { "EscritorioAzul", (EscritorioBuilder.ScenePath, SpawnFromEscritorio) },
+            { "SalaoInvertido", (SalaoBuilder.ScenePath, SpawnFromSalao) },
         };
         const int MainLocks = 4; // fluxo enxuto (opção B): 4 chaves
         /// <summary>Assar a luz ao gerar (leva alguns minutos). Desligue para gerar rápido enquanto mexe no layout.</summary>
@@ -596,7 +598,6 @@ namespace Somnium.EditorTools.Rooms
             var wood = Mat("Saguao_Madeira", new Color(0.22f, 0.13f, 0.07f), 0.35f);
             var cloth = Mat("Saguao_ToalhaDemo", new Color(0.12f, 0.2f, 0.45f), 0.1f);
             var gold = Mat("Saguao_Dourado", new Color(0.85f, 0.65f, 0.25f), 0.7f, 1f);
-            var book = Mat("Saguao_LivroDemo", new Color(0.35f, 0.08f, 0.08f), 0.3f);
             var metal = Mat("Saguao_CartuchoDemo", new Color(0.7f, 0.72f, 0.75f), 0.6f, 0.8f);
             var g = Child(root, "MesaDemonstracao", new Vector3(2f, 0f, -4.5f));
             g.localRotation = Quaternion.Euler(0f, -40f, 0f); // virada para o spawn
@@ -627,8 +628,6 @@ namespace Somnium.EditorTools.Rooms
                 pick.saveId = "demo/" + id;
             }
 
-            // Livro Antigo (Salão Invertido): inspecionar no inventário revela o Alicate.
-            Pickup("LivroAntigo", "Pickup_LivroAntigo", Box(g, "x", new Vector3(-0.42f, top + 0.035f, -0.05f), new Vector3(0.2f, 0.06f, 0.28f), book), new Vector3(0.3f, 0.25f, 0.35f));
             // Cartucho Vazio, Metade B do Medalhão e Chave 3 (Estufa).
             var cart = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             Place(cart, g, "x", new Vector3(-0.1f, top + 0.08f, -0.05f), new Vector3(0.08f, 0.08f, 0.08f), metal);

@@ -197,3 +197,22 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
   - Mais luz: lustre 7 → 11, luz de preenchimento no teto, arandelas 2,2 → 3,2, ambiente e teto mais claros, neblina mais leve.
 - `RoomKit.BakeLighting(...)`: usado pelas próximas salas.
 - Ajuste do P3DR0EM no `Brilho`: pisca mais vezes (intervalo de 1,7 s, duração de 0,6 s).
+
+### Salão Invertido (blockout jogável, luz assada)
+- Gerador `Rooms/03_SalaoInvertido/Editor/SalaoBuilder.cs`, com os menus **Somnium → Salas → Abrir / Gerar / Renderizar prévias do Salão Invertido**. Cena em x = 4000.
+- Sala de jantar vitoriana de ponta-cabeça: o jogador anda no forro de gesso; assoalho, tapete, mesa posta, cadeiras, aparador, lareira e relógio ficam lá em cima.
+  - O lambri de madeira fica no alto, e a sanca de gesso junto ao chão.
+- Detalhes surreais:
+  - **lareira com o fogo para baixo** (`FogoTremulo`, luz em tempo real);
+  - **velas invertidas** (candelabro e arandelas);
+  - **janelas com o céu embaixo** (textura gerada);
+  - **retratos de cabeça para baixo**;
+  - **relógio com o pêndulo para cima** (`PenduloInvertido`);
+  - a porta tem a maçaneta e a placa de ponta-cabeça.
+- **Puzzle**:
+  - **Manivela Quadrada** no mecanismo da parede leste: a manivela aparece e gira, as correntes somem e o lustre cai em queda livre e quebra (`LustreQueda`).
+  - Nos destroços está o **Livro Antigo** (inspeção 3D → Alicate).
+  - Sons sintetizados: catraca e vidro quebrando.
+- Novo `NaoAssar` (marca objetos que se movem para o bake ignorar). O bake do `RoomKit` também deixa em tempo real as luzes desses objetos (o fogo).
+- A **mesa de demonstração** do Saguão não tem mais o Livro. A porta do Salão no Saguão agora funciona.
+- Debug: **Receber Manivela Quadrada**.

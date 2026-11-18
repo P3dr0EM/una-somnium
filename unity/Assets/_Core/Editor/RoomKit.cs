@@ -314,7 +314,7 @@ namespace Somnium.EditorTools.Rooms
         static readonly System.Type[] DynamicMarkers =
         {
             typeof(Itr_Door), typeof(ItemPickup), typeof(Somnium.Interaction.GirarAoAtivar),
-            typeof(Somnium.Interaction.Brilho), typeof(Rigidbody),
+            typeof(Somnium.Interaction.Brilho), typeof(Rigidbody), typeof(Somnium.Core.NaoAssar),
         };
 
         static bool IsDynamic(Transform t, Transform root)
@@ -362,9 +362,10 @@ namespace Somnium.EditorTools.Rooms
             int baked = 0;
             foreach (var l in root.GetComponentsInChildren<Light>(false))
             {
+                if (IsDynamic(l.transform, root)) continue; // ex.: fogo da lareira, que tremula em tempo real
                 l.lightmapBakeType = LightmapBakeType.Baked;
                 if (l.type == LightType.Point && l.shadows == LightShadows.None) l.shadows = LightShadows.Soft;
-                l.shadowRadius = 0.15f;
+                l.shapeRadius = 0.15f;
                 baked++;
             }
 
@@ -425,6 +426,51 @@ namespace Somnium.EditorTools.Rooms
             Debug.Log($"[Somnium] Bake de {Path.GetFileName(scenePath)}: {(ok ? "ok" : "FALHOU")} em {sw.Elapsed.TotalSeconds:0}s " +
                       $"({stat} estáticos, {dyn} dinâmicos, {baked} luzes, {pts.Count} probes, {LightmapSettings.lightmaps.Length} lightmap(s))");
             return ok;
+        }
+
+        // ---------------- som sintetizado
+
+        /// <summary>Gera um .wav mono 16 bits a partir de uma função f(t em segundos) → amostra (-1..1), normaliza e importa.</summary>
+        public static AudioClip SynthClip(string path, float seconds, System.Func<float, System.Random, float> f, int sampleRate = 44100, int seed = 1)
+        {
+            EnsureFolder(Path.GetDirectoryName(path).Replace('\\', '/'));
+            int n = (int)(seconds * sampleRate);
+            var data = new float[n];
+            var rnd = new System.Random(seed);
+            float peak = 1e-4f;
+            for (int i = 0; i < n; i++)
+            {
+                data[i] = f((float)i / sampleRate, rnd);
+                peak = Mathf.Max(peak, Mathf.Abs(data[i]));
+            }
+            using (var fs = new FileStream(path, FileMode.Create))
+            using (var w = new BinaryWriter(fs))
+            {
+                int bytes = n * 2;
+                w.Write(System.Text.Encoding.ASCII.GetBytes("RIFF")); w.Write(36 + bytes);
+                w.Write(System.Text.Encoding.ASCII.GetBytes("WAVE")); w.Write(System.Text.Encoding.ASCII.GetBytes("fmt "));
+                w.Write(16); w.Write((short)1); w.Write((short)1); w.Write(sampleRate); w.Write(sampleRate * 2);
+                w.Write((short)2); w.Write((short)16);
+                w.Write(System.Text.Encoding.ASCII.GetBytes("data")); w.Write(bytes);
+                foreach (var s in data) w.Write((short)Mathf.Clamp(s / peak * 0.85f * 32767f, -32768f, 32767f));
+            }
+            AssetDatabase.ImportAsset(path);
+            return AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+        }
+
+        /// <summary>AudioSource 3D (som vem da posição do objeto), sem tocar ao iniciar.</summary>
+        public static AudioSource Sound3D(GameObject go, AudioClip clip, float volume = 1f, float minDistance = 2f, float maxDistance = 30f)
+        {
+            var s = go.AddComponent<AudioSource>();
+            s.clip = clip;
+            s.playOnAwake = false;
+            s.spatialBlend = 1f;
+            s.rolloffMode = AudioRolloffMode.Logarithmic;
+            s.minDistance = minDistance;
+            s.maxDistance = maxDistance;
+            s.dopplerLevel = 0f;
+            s.volume = volume;
+            return s;
         }
 
         // ---------------- projeto
