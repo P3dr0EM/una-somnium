@@ -181,3 +181,19 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 3. **"resource style/Theme.AppCompat.NoActionBar not found"** (Cardboard). Os templates de Gradle (`mainTemplate.gradle`, com as dependências do Cardboard: appcompat, play-services-vision, material, protobuf) tinham ido parar em `Assets/extras/Plugins/Android` na reorganização de pastas.
    - O Unity só lê templates em **`Assets/Plugins/Android`**. Os arquivos voltaram para lá.
 4. Os builds alteram sozinhos `ProjectSettings` e os assets do URP (XR nos "preloaded assets", filtros de shader). Essas mudanças foram descartadas.
+- **PR #5 aceito** (merge `7cba40b`): versão de demonstração na `main`.
+
+## 2026-11-18
+
+### Retorno da apresentação (APK no Cardboard)
+- Experiência boa no geral; mecânicas, inventário e textos funcionam bem em VR.
+- **Câmera baixa ("visão de criança")**. Causa: o `TrackedPoseDriver` da câmera (na `persistencia`) estava em "posição e rotação". O Cardboard só rastreia rotação, e a posição da cabeça zerava a altura da câmera (~0,95 m em vez de ~1,76 m). Correção: **só rotação** (`m_TrackingType: 1`). No PC não aparecia, porque sem headset o driver não mexe na posição.
+- **Iluminação do Saguão ruim no celular**. Pelos prints:
+  - *banding* forte: anéis de cor com faixas verde-oliva e rosa sobre o vermelho, perto das arandelas e do lustre;
+  - sem sombras, e contraste extremo.
+- Correções:
+  - `Mobile_RPAsset`: **HDR desligado** e **conversão sRGB aproximada desligada** (precisão de cor nos escuros).
+  - **Saguão com luz assada (baked)**: lightmaps com sombras macias, rebatimento e oclusão, mais Light Probes (126) para o que se move e uma sonda de reflexo para os metais. Bake em ~6 s.
+  - Mais luz: lustre 7 → 11, luz de preenchimento no teto, arandelas 2,2 → 3,2, ambiente e teto mais claros, neblina mais leve.
+- `RoomKit.BakeLighting(...)`: usado pelas próximas salas.
+- Ajuste do P3DR0EM no `Brilho`: pisca mais vezes (intervalo de 1,7 s, duração de 0,6 s).

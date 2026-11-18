@@ -34,6 +34,8 @@ namespace Somnium.EditorTools.Rooms
             { "EscritorioAzul", (EscritorioBuilder.ScenePath, SpawnFromEscritorio) },
         };
         const int MainLocks = 4; // fluxo enxuto (opção B): 4 chaves
+        /// <summary>Assar a luz ao gerar (leva alguns minutos). Desligue para gerar rápido enquanto mexe no layout.</summary>
+        const bool BakeLight = true;
         const string MatFolder = Folder + "/Materials";
         const string PersistenciaPath = "Assets/Scenes/persistencia.unity";
         const string ItemsFolder = "Assets/Data/Items";
@@ -185,6 +187,15 @@ namespace Somnium.EditorTools.Rooms
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AddToBuildSettings(ScenePath);
+
+            // Luz assada (baked): sombras e rebatimento também no celular, sem o limite de luzes por objeto.
+            if (BakeLight)
+            {
+                var probeArea = new Bounds(new Vector3(0f, 3.4f, 0f), new Vector3(HalfW * 2f - 1f, 6.2f, HalfD * 2f - 1f));
+                RoomKit.BakeLighting(root, ScenePath, probeArea, 2.4f);
+                EditorSceneManager.SaveScene(scene, ScenePath);
+            }
+
             AssetDatabase.SaveAssets();
             Debug.Log($"[Somnium] Blockout do Saguão salvo em {ScenePath}. Final do jogo ligado em {ending.name}.");
         }
@@ -193,10 +204,10 @@ namespace Somnium.EditorTools.Rooms
         {
             RenderSettings.skybox = null;
             RenderSettings.ambientMode = AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.17f, 0.145f, 0.125f);
+            RenderSettings.ambientLight = new Color(0.26f, 0.22f, 0.19f);
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
-            RenderSettings.fogDensity = 0.025f;
+            RenderSettings.fogDensity = 0.018f;
             RenderSettings.fogColor = new Color(0.05f, 0.04f, 0.035f);
             RenderSettings.defaultReflectionMode = DefaultReflectionMode.Custom;
         }
@@ -247,7 +258,7 @@ namespace Somnium.EditorTools.Rooms
             Box(lambri, "Sul", new Vector3(0f, 0.6f, -HalfD + 0.03f), new Vector3(HalfW * 2f, 1.2f, 0.06f), trim);
 
             Box(shell, "Teto", new Vector3(0f, Height + 0.15f, 0f), new Vector3(HalfW * 2f + 2 * T, 0.3f, HalfD * 2f + 2 * T),
-                Mat("Saguao_Teto", new Color(0.16f, 0.13f, 0.11f), 0.1f));
+                Mat("Saguao_Teto", new Color(0.34f, 0.28f, 0.22f), 0.1f));
         }
 
         // ------------------------------------------------------------------ mezanino e escadaria dupla
@@ -543,7 +554,9 @@ namespace Somnium.EditorTools.Rooms
                 Object.DestroyImmediate(c.GetComponent<Collider>());
             }
             foreach (var col in lustre.GetComponentsInChildren<Collider>()) Object.DestroyImmediate(col);
-            PointLight(lustre, "Luz_Lustre", new Vector3(0f, 4.7f, 0f), warm, 7f, 20f, LightShadows.Soft);
+            PointLight(lustre, "Luz_Lustre", new Vector3(0f, 4.7f, 0f), warm, 11f, 22f, LightShadows.Soft);
+            // Preenchimento acima do aro: ilumina o teto (o aro do lustre bloqueia a luz principal para cima).
+            PointLight(lustre, "Luz_Teto", new Vector3(0f, 5.9f, 0f), warm, 3.5f, 12f, LightShadows.None);
 
             // Arandelas: paredes laterais (entre as portas), ao lado da porta principal e na parede sul (perto do spawn).
             var sconces = new[]
@@ -564,7 +577,7 @@ namespace Somnium.EditorTools.Rooms
                 Object.DestroyImmediate(flame.GetComponent<Collider>());
                 Vector3 inward = -new Vector3(Mathf.Sign(pos.x) * (Mathf.Abs(pos.x) > HalfW - 1 ? 1 : 0), 0f,
                                               Mathf.Sign(pos.z) * (Mathf.Abs(pos.z) > HalfD - 1 ? 1 : 0)) * 0.35f;
-                PointLight(s, "Luz", inward + new Vector3(0f, 0.2f, 0f), warm, 2.2f, 7f, LightShadows.None);
+                PointLight(s, "Luz", inward + new Vector3(0f, 0.2f, 0f), warm, 3.2f, 8f, LightShadows.None);
             }
         }
 

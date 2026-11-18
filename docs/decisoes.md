@@ -1,3 +1,5 @@
+| 2026-11-18 | **Câmera com rastreamento só de rotação** (Cardboard é 3DoF). | Com "posição e rotação" a câmera caía para a altura do centro do corpo no celular. |
+| 2026-11-18 | **Luz assada (baked)** nas salas internas, começando pelo Saguão; perfil Mobile **sem HDR** e com conversão de cor exata. | Banding e falta de sombras no celular; luz assada dá sombra sem custo e não tem limite de 4 luzes por objeto. |
 | 2026-11-15 | **Demonstração em aula**: o jogo começa no **Saguão** e uma **mesa de demonstração** entrega os itens das salas que faltam (Livro Antigo, Cartucho Vazio, Metade B, Chave 3), para dar para jogar até o final. Versões **APK** (Cardboard) e **PC** (projetor). | Mostrar o percurso completo antes de todas as salas existirem. |
 | 2026-11-15 | Templates de Gradle do Android voltam para **`Assets/Plugins/Android`** (o Unity não os encontra em outra pasta). Não mover essa pasta na reorganização (P4). | Sem eles o Cardboard não compila (faltam as dependências). |
 # Somnium: decisões e pendências

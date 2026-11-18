@@ -305,6 +305,128 @@ namespace Somnium.EditorTools.Rooms
             }
         }
 
+        // ---------------- luz "baked" (assada em textura)
+
+        /// <summary>
+        /// Componentes que indicam objeto que se move, aparece/some ou anima: não entram como estáticos no bake
+        /// (recebem luz pelas Light Probes).
+        /// </summary>
+        static readonly System.Type[] DynamicMarkers =
+        {
+            typeof(Itr_Door), typeof(ItemPickup), typeof(Somnium.Interaction.GirarAoAtivar),
+            typeof(Somnium.Interaction.Brilho), typeof(Rigidbody),
+        };
+
+        static bool IsDynamic(Transform t, Transform root)
+        {
+            for (var p = t; p != null; p = p.parent)
+            {
+                foreach (var type in DynamicMarkers)
+                    if (p.GetComponent(type) != null) return true;
+                if (p.GetComponent("GatoTeleporte") != null) return true;
+                if (p == root) break;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Assa a luz da sala: as luzes ativas viram "Baked" (luz direta, sombras e rebatimento gravados em lightmap),
+        /// a geometria fixa vira estática e uma grade de Light Probes ilumina o que se move.
+        /// Bom para o celular: sombras sem custo e sem o limite de 4 luzes por objeto.
+        /// Chame depois de montar a cena e antes de salvar. Exige a cena já salva em <paramref name="scenePath"/>.
+        /// </summary>
+        public static bool BakeLighting(Transform root, string scenePath, Bounds probeArea, float probeSpacing,
+                                        float texelsPerUnit = 10f, int maxLightmapSize = 1024)
+        {
+            // 1) Estáticos: renderers ativos que não se movem.
+            int stat = 0, dyn = 0;
+            foreach (var r in root.GetComponentsInChildren<MeshRenderer>(false))
+            {
+                if (r.GetComponentInParent<Canvas>() != null) continue;
+                bool dynamic = IsDynamic(r.transform, root);
+                var flags = GameObjectUtility.GetStaticEditorFlags(r.gameObject);
+                if (dynamic)
+                {
+                    GameObjectUtility.SetStaticEditorFlags(r.gameObject, flags & ~StaticEditorFlags.ContributeGI);
+                    dyn++;
+                }
+                else
+                {
+                    GameObjectUtility.SetStaticEditorFlags(r.gameObject, flags | StaticEditorFlags.ContributeGI | StaticEditorFlags.BatchingStatic);
+                    r.receiveGI = ReceiveGI.Lightmaps;
+                    stat++;
+                }
+            }
+
+            // 2) Luzes ativas viram Baked (as desligadas, como a luz do final, continuam em tempo real).
+            int baked = 0;
+            foreach (var l in root.GetComponentsInChildren<Light>(false))
+            {
+                l.lightmapBakeType = LightmapBakeType.Baked;
+                if (l.type == LightType.Point && l.shadows == LightShadows.None) l.shadows = LightShadows.Soft;
+                l.shadowRadius = 0.15f;
+                baked++;
+            }
+
+            // 3) Light Probes em grade (iluminam portas que abrem, itens, o jogador segurando coisas...).
+            var probesGo = new GameObject("LightProbes");
+            probesGo.transform.SetParent(root, false);
+            var group = probesGo.AddComponent<LightProbeGroup>();
+            var pts = new List<Vector3>();
+            for (float x = probeArea.min.x; x <= probeArea.max.x + 0.01f; x += probeSpacing)
+                for (float y = probeArea.min.y; y <= probeArea.max.y + 0.01f; y += probeSpacing)
+                    for (float z = probeArea.min.z; z <= probeArea.max.z + 0.01f; z += probeSpacing)
+                        pts.Add(new Vector3(x, y, z));
+            group.probePositions = pts.ToArray();
+
+            // Sonda de reflexo assada: sem ela, materiais metálicos (dourado, ferro) ficam pretos com luz baked.
+            var reflGo = new GameObject("ReflexoAmbiente");
+            reflGo.transform.SetParent(root, false);
+            reflGo.transform.localPosition = probeArea.center;
+            var refl = reflGo.AddComponent<ReflectionProbe>();
+            refl.mode = ReflectionProbeMode.Baked;
+            refl.size = probeArea.size + Vector3.one;
+            refl.boxProjection = true;
+            refl.resolution = 128;
+            refl.hdr = false;
+            // Fundo da captura = ambiente da sala (sem isso entra um "céu" azul padrão e as bordas metálicas ficam azuladas).
+            refl.clearFlags = UnityEngine.Rendering.ReflectionProbeClearFlags.SolidColor;
+            refl.backgroundColor = RenderSettings.ambientLight;
+
+            // 4) Configuração do bake (salva ao lado da cena).
+            var ls = new LightingSettings
+            {
+                name = Path.GetFileNameWithoutExtension(scenePath) + "_Iluminacao",
+                bakedGI = true,
+                realtimeGI = false,
+                lightmapper = LightingSettings.Lightmapper.ProgressiveGPU,
+                lightmapResolution = texelsPerUnit,
+                lightmapMaxSize = maxLightmapSize,
+                lightmapPadding = 2,
+                directionalityMode = LightmapsMode.NonDirectional,
+                lightmapCompression = LightmapCompression.NormalQuality,
+                maxBounces = 3,
+                indirectScale = 1.4f,
+                directSampleCount = 32,
+                indirectSampleCount = 256,
+                environmentSampleCount = 128,
+                filteringMode = LightingSettings.FilterMode.Auto,
+                ao = true,
+                aoMaxDistance = 1f,
+                mixedBakeMode = MixedLightingMode.IndirectOnly,
+            };
+            string lsPath = Path.ChangeExtension(scenePath, null) + "_Iluminacao.lighting";
+            AssetDatabase.DeleteAsset(lsPath);
+            AssetDatabase.CreateAsset(ls, lsPath);
+            Lightmapping.lightingSettings = ls;
+
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            bool ok = Lightmapping.Bake();
+            Debug.Log($"[Somnium] Bake de {Path.GetFileName(scenePath)}: {(ok ? "ok" : "FALHOU")} em {sw.Elapsed.TotalSeconds:0}s " +
+                      $"({stat} estáticos, {dyn} dinâmicos, {baked} luzes, {pts.Count} probes, {LightmapSettings.lightmaps.Length} lightmap(s))");
+            return ok;
+        }
+
         // ---------------- projeto
 
         public static void AddToBuildSettings(string path)
