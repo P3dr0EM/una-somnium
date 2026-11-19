@@ -236,3 +236,5 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
   - Salão: candelabro 1,0, janelas 1,6;
   - rebatimento 1,1.
 - Colinas XP em Gamma: grama menos saturada, sol 1,15, porta menos branca.
+- **Retorno do 3º teste:** cores muito melhores no Cardboard (Gamma).
+- Pedido de **Salão Invertido v2**: corrente saindo do chão e subindo até o lustre (dúvida "quem está de ponta-cabeça"), guincho no chão, sala de ~9 m, arcos e pilastras góticos, estátuas invertidas, hera e rosas. Benchmark em `docs/notas/benchmark-salao-invertido.md`; especificação em `docs/notas/salao-invertido-v2-spec.md`.
