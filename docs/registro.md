@@ -216,3 +216,23 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 - Novo `NaoAssar` (marca objetos que se movem para o bake ignorar). O bake do `RoomKit` também deixa em tempo real as luzes desses objetos (o fogo).
 - A **mesa de demonstração** do Saguão não tem mais o Livro. A porta do Salão no Saguão agora funciona.
 - Debug: **Receber Manivela Quadrada**.
+
+### Cor e iluminação no Cardboard (2º teste)
+- **Altura da câmera ok** depois da correção.
+- **Cores ainda ruins no Saguão.** Os prints mostraram *posterização* forte, mesmo com a luz assada: poucos tons, faixas verde-oliva e amarelas no vermelho. Diagnóstico:
+  - projeto em espaço de cor **Linear** gravando em 8 bits no Cardboard: sobram pouquíssimos tons nos escuros;
+  - em vermelho escuro, o verde e o azul "pulam" de tom em momentos diferentes.
+- **Correção: espaço de cor Gamma** (padrão em VR mobile).
+  - Todas as salas regeradas e reassadas.
+  - Novo menu **Somnium → Salas → Gerar TODAS as salas** (`TodasSalas.cs`).
+- **Direção de arte do Saguão** seguindo as referências do P3DR0EM (mansão de Resident Evil, `docs/references/reference1.jpg`, `reference5.webp`):
+  - lambri de madeira escura até 1,4 m com friso;
+  - papel de parede vinho-amarronzado dessaturado;
+  - tapete verde-escuro; mármore envelhecido; teto de madeira;
+  - **cúpulas acesas no lustre** (ponto focal);
+  - penumbra quente com poças de luz.
+- Intensidades recalibradas para Gamma:
+  - Saguão: lustre 6,5, teto 1,6, arandelas 1,9, ambiente 0,14;
+  - Salão: candelabro 1,0, janelas 1,6;
+  - rebatimento 1,1.
+- Colinas XP em Gamma: grama menos saturada, sol 1,15, porta menos branca.

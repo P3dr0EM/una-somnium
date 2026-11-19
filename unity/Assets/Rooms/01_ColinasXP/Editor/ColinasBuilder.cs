@@ -154,7 +154,7 @@ namespace Somnium.EditorTools.Rooms
             var sun = new GameObject("Sol").AddComponent<Light>();
             sun.type = LightType.Directional;
             sun.color = new Color(1f, 0.96f, 0.88f);
-            sun.intensity = 1.5f;
+            sun.intensity = 1.15f; // Gamma (2026-11-18): 1,5 estourava
             sun.shadows = LightShadows.Soft;
             sun.transform.rotation = Quaternion.Euler(42f, 125f, 0f);
             RenderSettings.sun = sun;
@@ -247,7 +247,7 @@ namespace Somnium.EditorTools.Rooms
                 door.name = "Modelo";
                 door.transform.SetParent(g, false);
                 StripPortal(door);
-                var white = Mat("Colinas_PortaBranca", new Color(0.86f, 0.85f, 0.8f), 0.25f);
+                var white = Mat("Colinas_PortaBranca", new Color(0.74f, 0.72f, 0.66f), 0.25f);
                 foreach (var r in door.GetComponentsInChildren<Renderer>(true))
                 {
                     r.gameObject.SetActive(true);
@@ -782,7 +782,7 @@ namespace Somnium.EditorTools.Rooms
             string path = $"{GenFolder}/Grama.png";
             const int s = 256;
             var tex = new Texture2D(s, s, TextureFormat.RGB24, true);
-            var baseCol = new Color(0.33f, 0.66f, 0.13f);
+            var baseCol = new Color(0.3f, 0.52f, 0.14f);
             var px = new Color[s * s];
             var rnd = new System.Random(3);
             for (int y = 0; y < s; y++)
@@ -826,7 +826,7 @@ namespace Somnium.EditorTools.Rooms
             var tex = new Texture2D(w, h, TextureFormat.RGB24, false);
             for (int y = 0; y < h; y++)
             {
-                var c = Color.Lerp(new Color(0.16f, 0.38f, 0.07f), new Color(0.55f, 0.8f, 0.2f), y / (h - 1f));
+                var c = Color.Lerp(new Color(0.14f, 0.3f, 0.07f), new Color(0.45f, 0.65f, 0.18f), y / (h - 1f));
                 for (int x = 0; x < w; x++) tex.SetPixel(x, y, c);
             }
             tex.Apply();

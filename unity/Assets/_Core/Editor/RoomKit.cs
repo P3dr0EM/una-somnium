@@ -407,7 +407,7 @@ namespace Somnium.EditorTools.Rooms
                 directionalityMode = LightmapsMode.NonDirectional,
                 lightmapCompression = LightmapCompression.NormalQuality,
                 maxBounces = 3,
-                indirectScale = 1.4f,
+                indirectScale = 1.1f,
                 directSampleCount = 32,
                 indirectSampleCount = 256,
                 environmentSampleCount = 128,

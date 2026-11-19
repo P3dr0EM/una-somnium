@@ -226,7 +226,7 @@ namespace Somnium.EditorTools.Rooms
                 RoomKit.Prim(PrimitiveType.Cylinder, cand, "Vela", new Vector3(x, -0.42f, 0f), new Vector3(0.04f, 0.1f, 0.04f), wax);
                 RoomKit.Prim(PrimitiveType.Sphere, cand, "Chama", new Vector3(x, -0.55f, 0f), new Vector3(0.035f, 0.07f, 0.035f), flame);
             }
-            RoomKit.PointLight(cand, "Luz_Candelabro", new Vector3(0f, -0.65f, 0f), Warm, 2.4f, 6f);
+            RoomKit.PointLight(cand, "Luz_Candelabro", new Vector3(0f, -0.65f, 0f), Warm, 1.0f, 6f);
 
             // Cadeiras: o assento a 45 cm do assoalho (lá em cima) e o encosto apontando para baixo.
             var seats = new List<(Vector3 pos, float yaw)>();
@@ -418,7 +418,7 @@ namespace Somnium.EditorTools.Rooms
                 })
                     RoomKit.Box(wnd, n, p, s, frame, false);
                 // Luz fria entrando "de baixo para cima" (o céu está embaixo).
-                RoomKit.PointLight(wnd, "Luz_Janela", new Vector3(0f, -0.8f, 0.7f), new Color(0.7f, 0.82f, 1f), 2.2f, 6.5f);
+                RoomKit.PointLight(wnd, "Luz_Janela", new Vector3(0f, -0.8f, 0.7f), new Color(0.7f, 0.82f, 1f), 1.6f, 6.5f);
             }
         }
 

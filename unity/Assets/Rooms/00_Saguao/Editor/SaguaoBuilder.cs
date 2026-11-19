@@ -206,7 +206,7 @@ namespace Somnium.EditorTools.Rooms
         {
             RenderSettings.skybox = null;
             RenderSettings.ambientMode = AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.26f, 0.22f, 0.19f);
+            RenderSettings.ambientLight = new Color(0.14f, 0.12f, 0.1f);
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
             RenderSettings.fogDensity = 0.018f;
@@ -233,7 +233,7 @@ namespace Somnium.EditorTools.Rooms
                     tile.layer = groundLayer;
                 }
 
-            var wall = Mat("Saguao_Parede", new Color(0.27f, 0.12f, 0.10f), 0.15f);
+            var wall = Mat("Saguao_Parede", new Color(0.23f, 0.14f, 0.12f), 0.15f); // vinho-amarronzado dessaturado (refs.: mansão RE)
             var trim = Mat("Saguao_Madeira", new Color(0.22f, 0.13f, 0.07f), 0.35f);
             var paredes = Child(shell, "Paredes", Vector3.zero);
             float zN = HalfD + T / 2f, zS = -HalfD - T / 2f, xW = -HalfW - T / 2f, xE = HalfW + T / 2f;
@@ -257,10 +257,32 @@ namespace Somnium.EditorTools.Rooms
 
             // Rodapé de madeira (lambri baixo) nas paredes sul, leste e oeste.
             var lambri = Child(shell, "Lambri", Vector3.zero);
-            Box(lambri, "Sul", new Vector3(0f, 0.6f, -HalfD + 0.03f), new Vector3(HalfW * 2f, 1.2f, 0.06f), trim);
+            // Lambri de madeira escura até 1,4 m em todas as paredes (como nas referências), com friso no topo.
+            var darkWood = Mat("Saguao_Lambri", new Color(0.13f, 0.08f, 0.05f), 0.4f);
+            const float lh = 1.4f;
+            void PanelX(string n, float z, float x0, float x1, float inward)
+            {
+                Box(lambri, n, new Vector3((x0 + x1) / 2f, lh / 2f, z + inward * 0.03f), new Vector3(x1 - x0, lh, 0.06f), darkWood);
+                Box(lambri, n + "_Friso", new Vector3((x0 + x1) / 2f, lh + 0.03f, z + inward * 0.045f), new Vector3(x1 - x0, 0.06f, 0.09f), trim);
+            }
+            void PanelZ(string n, float x, float z0, float z1, float inward)
+            {
+                Box(lambri, n, new Vector3(x + inward * 0.03f, lh / 2f, (z0 + z1) / 2f), new Vector3(0.06f, lh, z1 - z0), darkWood);
+                Box(lambri, n + "_Friso", new Vector3(x + inward * 0.045f, lh + 0.03f, (z0 + z1) / 2f), new Vector3(0.09f, 0.06f, z1 - z0), trim);
+            }
+            PanelX("Sul", -HalfD, -HalfW, HalfW, 1f);
+            PanelX("Norte_Esq", HalfD, -HalfW, -MainDoorHalfW - 0.2f, -1f);
+            PanelX("Norte_Dir", HalfD, MainDoorHalfW + 0.2f, HalfW, -1f);
+            foreach (var (side, x, inward) in new[] { ("Oeste", -HalfW, 1f), ("Leste", HalfW, -1f) })
+            {
+                float a = SideDoorZ - SideDoorHalfW - 0.14f, b = SideDoorZ + SideDoorHalfW + 0.14f;
+                PanelZ($"{side}_A", x, -HalfD, -b, inward);
+                PanelZ($"{side}_B", x, -a, a, inward);
+                PanelZ($"{side}_C", x, b, HalfD, inward);
+            }
 
             Box(shell, "Teto", new Vector3(0f, Height + 0.15f, 0f), new Vector3(HalfW * 2f + 2 * T, 0.3f, HalfD * 2f + 2 * T),
-                Mat("Saguao_Teto", new Color(0.34f, 0.28f, 0.22f), 0.1f));
+                Mat("Saguao_Teto", new Color(0.24f, 0.17f, 0.11f), 0.2f));
         }
 
         // ------------------------------------------------------------------ mezanino e escadaria dupla
@@ -268,7 +290,7 @@ namespace Somnium.EditorTools.Rooms
         static void BuildBalconyAndStairs()
         {
             var wood = Mat("Saguao_Madeira", new Color(0.22f, 0.13f, 0.07f), 0.35f);
-            var carpet = Mat("Saguao_Tapete", new Color(0.35f, 0.04f, 0.05f), 0.05f);
+            var carpet = Mat("Saguao_Tapete", new Color(0.26f, 0.05f, 0.05f), 0.05f);
             var g = Child(root, "Mezanino", Vector3.zero);
 
             float depth = HalfD - BalconyZ;
@@ -539,8 +561,9 @@ namespace Somnium.EditorTools.Rooms
         {
             var brass = Mat("Saguao_Dourado", new Color(0.85f, 0.65f, 0.25f), 0.7f, 1f);
             var candle = Emissive("Saguao_Vela", new Color(1f, 0.75f, 0.45f), 2.5f);
+            var shadeMat = Emissive("Saguao_Cupula", new Color(1f, 0.8f, 0.55f), 1.6f);
             var g = Child(root, "Iluminacao", Vector3.zero);
-            var warm = new Color(1f, 0.78f, 0.52f);
+            var warm = new Color(1f, 0.74f, 0.45f);
 
             // Lustre central.
             var lustre = Child(g, "Lustre", new Vector3(0f, 0f, -0.5f));
@@ -554,11 +577,16 @@ namespace Somnium.EditorTools.Rooms
                 var c = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
                 Place(c, lustre, $"Vela_{i}", new Vector3(Mathf.Cos(a) * 0.85f, 5.45f, Mathf.Sin(a) * 0.85f), new Vector3(0.06f, 0.1f, 0.06f), candle);
                 Object.DestroyImmediate(c.GetComponent<Collider>());
+                // Cúpula de vidro acesa sobre cada vela (ponto focal, como nas referências).
+                var shade = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                Place(shade, lustre, $"Cupula_{i}", new Vector3(Mathf.Cos(a) * 0.85f, 5.56f, Mathf.Sin(a) * 0.85f), new Vector3(0.2f, 0.17f, 0.2f), shadeMat);
+                Object.DestroyImmediate(shade.GetComponent<Collider>());
+                shade.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
             }
             foreach (var col in lustre.GetComponentsInChildren<Collider>()) Object.DestroyImmediate(col);
-            PointLight(lustre, "Luz_Lustre", new Vector3(0f, 4.7f, 0f), warm, 11f, 22f, LightShadows.Soft);
+            PointLight(lustre, "Luz_Lustre", new Vector3(0f, 4.7f, 0f), warm, 6.5f, 22f, LightShadows.Soft);
             // Preenchimento acima do aro: ilumina o teto (o aro do lustre bloqueia a luz principal para cima).
-            PointLight(lustre, "Luz_Teto", new Vector3(0f, 5.9f, 0f), warm, 3.5f, 12f, LightShadows.None);
+            PointLight(lustre, "Luz_Teto", new Vector3(0f, 5.9f, 0f), warm, 1.6f, 12f, LightShadows.None);
 
             // Arandelas: paredes laterais (entre as portas), ao lado da porta principal e na parede sul (perto do spawn).
             var sconces = new[]
@@ -579,7 +607,7 @@ namespace Somnium.EditorTools.Rooms
                 Object.DestroyImmediate(flame.GetComponent<Collider>());
                 Vector3 inward = -new Vector3(Mathf.Sign(pos.x) * (Mathf.Abs(pos.x) > HalfW - 1 ? 1 : 0), 0f,
                                               Mathf.Sign(pos.z) * (Mathf.Abs(pos.z) > HalfD - 1 ? 1 : 0)) * 0.35f;
-                PointLight(s, "Luz", inward + new Vector3(0f, 0.2f, 0f), warm, 3.2f, 8f, LightShadows.None);
+                PointLight(s, "Luz", inward + new Vector3(0f, 0.2f, 0f), warm, 1.9f, 8f, LightShadows.None);
             }
         }
 
@@ -641,7 +669,7 @@ namespace Somnium.EditorTools.Rooms
         static void BuildDecor()
         {
             var g = Child(root, "Decoracao", Vector3.zero);
-            var rug = Mat("Saguao_Tapete", new Color(0.35f, 0.04f, 0.05f), 0.05f);
+            var rug = Mat("Saguao_TapeteVerde", new Color(0.1f, 0.17f, 0.13f), 0.05f);
             var wood = Mat("Saguao_Madeira", new Color(0.22f, 0.13f, 0.07f), 0.35f);
             var frame = Mat("Saguao_Dourado", new Color(0.85f, 0.65f, 0.25f), 0.7f, 1f);
             var canvasMat = Mat("Saguao_Quadro", new Color(0.1f, 0.12f, 0.1f), 0.3f);
@@ -787,12 +815,12 @@ namespace Somnium.EditorTools.Rooms
         static Material CheckerMaterial(string name, float tileW, float tileD)
         {
             string texPath = $"{MatFolder}/Xadrez.png";
-            if (!File.Exists(texPath))
+            if (true) // sempre regera (cores ajustadas em 2026-11-18)
             {
                 const int size = 256;
                 var tex = new Texture2D(size, size, TextureFormat.RGB24, false);
-                var a = new Color(0.78f, 0.74f, 0.64f);
-                var b = new Color(0.07f, 0.12f, 0.09f);
+                var a = new Color(0.6f, 0.56f, 0.48f);
+                var b = new Color(0.09f, 0.08f, 0.07f);
                 for (int y = 0; y < size; y++)
                     for (int x = 0; x < size; x++)
                         tex.SetPixel(x, y, ((x / (size / 2)) + (y / (size / 2))) % 2 == 0 ? a : b);
