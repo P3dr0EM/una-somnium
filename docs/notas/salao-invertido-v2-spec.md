@@ -1,4 +1,4 @@
-# Salão Invertido v2: especificação (decidida em 2026-11-18)
+# Salão Invertido v2: especificação (decidida em 2026-11-18, IMPLEMENTADA no mesmo dia)
 
 Plano para refazer o Salão Invertido. Quem implementar segue este documento e `docs/notas/benchmark-salao-invertido.md`.
 

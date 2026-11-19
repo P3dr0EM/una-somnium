@@ -238,3 +238,18 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 - Colinas XP em Gamma: grama menos saturada, sol 1,15, porta menos branca.
 - **Retorno do 3º teste:** cores muito melhores no Cardboard (Gamma).
 - Pedido de **Salão Invertido v2**: corrente saindo do chão e subindo até o lustre (dúvida "quem está de ponta-cabeça"), guincho no chão, sala de ~9 m, arcos e pilastras góticos, estátuas invertidas, hera e rosas. Benchmark em `docs/notas/benchmark-salao-invertido.md`; especificação em `docs/notas/salao-invertido-v2-spec.md`.
+
+### Salão Invertido v2
+- **Pé-direito de 9 m**: a mobília lá em cima e o lustre a ~6 m (queda de ~1,1 s).
+- **A corrente sobe do chão.** Ela sai de uma **roldana** no centro da rosácea e sobe esticada até o lustre, o elemento "impossível" que deixa a dúvida sobre quem está de ponta-cabeça. No chão, ela corre até o **guincho**, a 2 m.
+  - A Manivela vai no guincho, e o lustre não cai em cima de quem gira (conforto em VR).
+- Lustre de ponta-cabeça: gancho embaixo, dois anéis vazados, velas pendendo com a chama para baixo e cristais para cima; luz própria em tempo real (some quando cai).
+- Elementos das referências (`diningHall.jpg`, `dinig hall2.jpg`):
+  - pilastras e **arcos ogivais invertidos** (capitel embaixo, base em cima, arco com a ponta para baixo);
+  - **estátuas de cabeça para baixo** em nichos ao lado da lareira;
+  - janelas altas com arco embaixo;
+  - **hera** descendo do assoalho lá em cima (uma malha combinada);
+  - **rosas** em vasos invertidos nos cantos.
+- Arandelas em dois níveis nas pilastras.
+- Dourado e ferro **foscos** (metal puro fica preto com luz assada).
+- Benchmark de jogos de referência: `docs/notas/benchmark-salao-invertido.md`.

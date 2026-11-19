@@ -1,3 +1,4 @@
+| 2026-11-18 | **Salão Invertido v2**: pé-direito de 9 m; a corrente do lustre **sobe do chão** (roldana) e o guincho fica a 2 m; arcos góticos, estátuas, hera e rosas, todos invertidos. | Pedido do P3DR0EM: deixar a dúvida sobre quem está de ponta-cabeça. O guincho afastado evita que o lustre caia na cabeça do jogador em VR. |
 | 2026-11-18 | **Espaço de cor Gamma** (antes Linear). | No Cardboard, Linear em 8 bits destruía os escuros (posterização com cores erradas). Gamma é o padrão em VR mobile. |
 | 2026-11-18 | **Direção de arte "mansão escura"** (referências de Resident Evil): madeira escura, tons quentes dessaturados, poças de luz e penumbra suave. | Pedido do P3DR0EM, com imagens em `docs/references`. |
 | 2026-11-18 | **Câmera com rastreamento só de rotação** (Cardboard é 3DoF). | Com "posição e rotação" a câmera caía para a altura do centro do corpo no celular. |

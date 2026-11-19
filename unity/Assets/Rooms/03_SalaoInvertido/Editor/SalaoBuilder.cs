@@ -17,7 +17,9 @@ namespace Somnium.EditorTools.Rooms
     /// Gera o Salão Invertido: sala de jantar vitoriana de ponta-cabeça (o jogador anda no forro; mesa, cadeiras,
     /// lareira, aparador e relógio ficam "grudados" lá em cima), com lareira de fogo para baixo, velas invertidas,
     /// janelas com o céu embaixo, quadros e relógio invertidos (pêndulo para cima).
-    /// Puzzle: Manivela Quadrada no mecanismo da parede → as correntes soltam → o lustre despenca e quebra → Livro Antigo.
+    /// v2: pé-direito de 9 m, pilastras e arcos góticos invertidos, estátuas de cabeça para baixo, hera e rosas.
+    /// Puzzle: a corrente SOBE do chão (roldana) até o lustre; Manivela Quadrada no guincho do chão → a corrente afrouxa →
+    /// o lustre despenca e quebra → Livro Antigo.
     /// Luz assada (baked). Gerar de novo sobrescreve a cena.
     /// </summary>
     public static class SalaoBuilder
@@ -29,10 +31,14 @@ namespace Somnium.EditorTools.Rooms
 
         public static readonly Vector3 Origin = new Vector3(4000f, 0f, 0f);
 
-        const float HalfW = 5f, HalfD = 7f, H = 5f, T = 0.25f;
+        // v2 (2026-11-18): pé-direito de 9 m; o lustre fica sobre a rosácea/mesa e a corrente sobe do chão.
+        const float HalfW = 5f, HalfD = 7f, H = 9f, T = 0.25f;
         const float DoorHalfW = 0.6f, DoorH = 2.3f;
-        static readonly Vector3 LustrePos = new Vector3(0f, 0f, 3.2f);   // xz do lustre
-        static readonly Vector3 MechPos = new Vector3(HalfW - 0.12f, 1.3f, 3.2f);
+        static readonly Vector3 LustrePos = new Vector3(0f, 0f, -1.5f);  // xz do lustre (embaixo da mesa lá em cima)
+        const float LustreBottom = 6f;                                    // ponto mais baixo do lustre (onde a corrente prende)
+        static readonly Vector3 WinchPos = new Vector3(2.1f, 0f, -1.5f);  // guincho no chão, longe do ponto de queda
+        static readonly float[] BaysZ = { -3.5f, 0f, 3.5f };              // vãos entre pilastras (paredes leste/oeste)
+        static readonly float[] PilastersZ = { -5.25f, -1.75f, 1.75f, 5.25f };
         static readonly Color Warm = new Color(1f, 0.78f, 0.5f);
 
         static RoomKit kit;
@@ -103,12 +109,15 @@ namespace Somnium.EditorTools.Rooms
             root.gameObject.AddComponent<RoomSettings>().roomName = "Salão Invertido";
 
             BuildShell();
+            BuildGothic();
             BuildTableAndChairs();
             BuildFireplace();
+            BuildStatues();
             BuildClockAndSideboard();
             BuildPaintings();
             BuildWindows();
             BuildSconces();
+            BuildIvyAndRoses();
             BuildChandelierPuzzle();
 
             var spawn = RoomKit.Child(root, "PlayerSpawn", new Vector3(0f, 0f, -HalfD + 1.2f));
@@ -117,7 +126,7 @@ namespace Somnium.EditorTools.Rooms
             EditorSceneManager.SaveScene(scene, ScenePath);
             RoomKit.AddToBuildSettings(ScenePath);
 
-            var probeArea = new Bounds(new Vector3(0f, 2.5f, 0f), new Vector3(HalfW * 2f - 1f, 4.4f, HalfD * 2f - 1f));
+            var probeArea = new Bounds(new Vector3(0f, H / 2f, 0f), new Vector3(HalfW * 2f - 1f, H - 0.8f, HalfD * 2f - 1f));
             RoomKit.BakeLighting(root, ScenePath, probeArea, 2.2f);
             EditorSceneManager.SaveScene(scene, ScenePath);
             AssetDatabase.SaveAssets();
@@ -336,8 +345,8 @@ namespace Somnium.EditorTools.Rooms
             // Retratos: a cabeça está EMBAIXO e os ombros em cima.
             foreach (var (pos, yaw) in new[]
             {
-                (new Vector3(-2.6f, 2.5f, -HalfD + 0.04f), 0f), (new Vector3(2.6f, 2.5f, -HalfD + 0.04f), 0f),
-                (new Vector3(-HalfW + 0.04f, 2.5f, -1.2f), 90f),
+                (new Vector3(-3.75f, 3.45f, -HalfD + 0.04f), 0f), (new Vector3(3.75f, 3.45f, -HalfD + 0.04f), 0f),
+                (new Vector3(-HalfW + 0.04f, 3.45f, 0f), 90f),
             })
             {
                 var p = RoomKit.Child(g, "Retrato", pos);
@@ -384,45 +393,184 @@ namespace Somnium.EditorTools.Rooms
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
+        // ------------------------------------------------------------------ apoio: paredes como "molduras" locais
+
+        /// <summary>
+        /// Moldura de referência numa parede: local +X corre ao longo da parede, +Z aponta para dentro da sala, Y para cima.
+        /// "N" norte, "S" sul, "L" leste, "O" oeste.
+        /// </summary>
+        static Transform WallFrame(Transform parent, string wall)
+        {
+            switch (wall)
+            {
+                case "S": { var t = RoomKit.Child(parent, "Parede_S", new Vector3(0f, 0f, -HalfD)); return t; }
+                case "N": { var t = RoomKit.Child(parent, "Parede_N", new Vector3(0f, 0f, HalfD)); t.localRotation = Quaternion.Euler(0f, 180f, 0f); return t; }
+                case "L": { var t = RoomKit.Child(parent, "Parede_L", new Vector3(HalfW, 0f, 0f)); t.localRotation = Quaternion.Euler(0f, -90f, 0f); return t; }
+                default: { var t = RoomKit.Child(parent, "Parede_O", new Vector3(-HalfW, 0f, 0f)); t.localRotation = Quaternion.Euler(0f, 90f, 0f); return t; }
+            }
+        }
+
+        /// <summary>Junta muitas caixas pequenas numa malha só (hera, elos de corrente): um objeto, uma chamada de desenho.</summary>
+        static GameObject CombinedBoxes(Transform parent, string name, List<Matrix4x4> parts, Material mat)
+        {
+            var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var cubeMesh = cube.GetComponent<MeshFilter>().sharedMesh;
+            Object.DestroyImmediate(cube);
+            var ci = new CombineInstance[parts.Count];
+            for (int i = 0; i < parts.Count; i++) ci[i] = new CombineInstance { mesh = cubeMesh, transform = parts[i] };
+            var mesh = new Mesh { name = name, indexFormat = IndexFormat.UInt32 };
+            mesh.CombineMeshes(ci, true, true);
+            mesh.RecalculateBounds();
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            go.AddComponent<MeshRenderer>().sharedMaterial = mat;
+            return go;
+        }
+
+        /// <summary>Elos de corrente de a até b (coordenadas locais do pai), alternando 90° como numa corrente de verdade.</summary>
+        static List<Matrix4x4> ChainLinks(Vector3 a, Vector3 b, float linkLen = 0.09f)
+        {
+            var list = new List<Matrix4x4>();
+            var dir = b - a;
+            int n = Mathf.Max(1, Mathf.RoundToInt(dir.magnitude / linkLen));
+            var rot = Quaternion.LookRotation(dir.normalized, Mathf.Abs(dir.normalized.y) > 0.9f ? Vector3.forward : Vector3.up);
+            for (int i = 0; i < n; i++)
+            {
+                var p = a + dir * ((i + 0.5f) / n);
+                var r = rot * Quaternion.Euler(0f, 0f, i % 2 == 0 ? 0f : 90f);
+                list.Add(Matrix4x4.TRS(p, r, new Vector3(0.05f, 0.016f, linkLen * 1.15f)));
+            }
+            return list;
+        }
+
+        // ------------------------------------------------------------------ gótico: pilastras e arcos ogivais de ponta-cabeça
+
+        static void BuildGothic()
+        {
+            var wood = kit.Mat("Salao_MadeiraEscura", new Color(0.16f, 0.09f, 0.05f), 0.4f);
+            var g = RoomKit.Child(root, "Gotico", Vector3.zero);
+
+            // (parede, posições das pilastras ao longo dela, vãos [u0,u1] que recebem arco)
+            var walls = new (string wall, float[] pil, (float, float)[] bays)[]
+            {
+                ("L", PilastersZ, new[] { (-5.25f, -1.75f), (-1.75f, 1.75f), (1.75f, 5.25f) }),
+                ("O", PilastersZ, new[] { (-5.25f, -1.75f), (-1.75f, 1.75f), (1.75f, 5.25f) }),
+                ("S", new[] { -2.3f, 2.3f }, new[] { (-5f, -2.3f), (2.3f, 5f) }),
+                ("N", new[] { -1.6f, 1.6f }, new[] { (-5f, -1.6f), (1.6f, 5f) }),
+            };
+            foreach (var (wall, pil, bays) in walls)
+            {
+                var f = WallFrame(g, wall);
+                foreach (float u in pil)
+                {
+                    RoomKit.Box(f, "Pilastra", new Vector3(u, H / 2f, 0.11f), new Vector3(0.32f, H, 0.22f), wood, false);
+                    // Capitel EMBAIXO (numa sala normal fica no alto) e base EM CIMA.
+                    RoomKit.Box(f, "Capitel", new Vector3(u, 2.55f, 0.15f), new Vector3(0.44f, 0.16f, 0.3f), wood, false);
+                    RoomKit.Box(f, "Base", new Vector3(u, H - 1.25f, 0.15f), new Vector3(0.44f, 0.2f, 0.3f), wood, false);
+                }
+                foreach (var (u0, u1) in bays)
+                {
+                    float a = u0 + 0.16f, b = u1 - 0.16f, uc = (u0 + u1) / 2f;
+                    RoomKit.Box(f, "Viga", new Vector3(uc, 2.55f, 0.06f), new Vector3(b - a, 0.08f, 0.08f), wood, false);
+                    // Arco ogival invertido: a ponta aponta para BAIXO (para o "teto" onde o jogador anda).
+                    foreach (var (top, tip) in new[] { (2.5f, 1.1f), (2.5f, 1.55f) })
+                    {
+                        float inset = tip > 1.3f ? 0.35f : 0f;
+                        foreach (float side in new[] { -1f, 1f })
+                        {
+                            var p0 = new Vector3(side < 0 ? a + inset : b - inset, top, 0.06f);
+                            var p1 = new Vector3(uc, tip, 0.06f);
+                            var d = p1 - p0;
+                            var board = RoomKit.Box(f, "Arco", (p0 + p1) / 2f, new Vector3(d.magnitude, 0.09f, 0.07f), wood, false);
+                            board.transform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
+                        }
+                    }
+                    RoomKit.Box(f, "Fecho", new Vector3(uc, 1.08f, 0.07f), new Vector3(0.12f, 0.16f, 0.1f), wood, false);
+                }
+            }
+        }
+
+        // ------------------------------------------------------------------ estátuas em nichos, de cabeça para baixo
+
+        static void BuildStatues()
+        {
+            var marble = kit.Mat("Salao_MarmoreBranco", new Color(0.86f, 0.85f, 0.8f), 0.35f);
+            var niche = kit.Mat("Salao_Nicho", new Color(0.07f, 0.05f, 0.05f), 0.2f);
+            var wood = kit.Mat("Salao_MadeiraEscura", new Color(0.16f, 0.09f, 0.05f), 0.4f);
+            var f = WallFrame(RoomKit.Child(root, "Estatuas", Vector3.zero), "N");
+            foreach (float u in new[] { -3.3f, 3.3f })
+            {
+                RoomKit.Box(f, "Nicho", new Vector3(u, 5.6f, 0.02f), new Vector3(1.1f, 2.9f, 0.03f), niche, false);
+                foreach (float s in new[] { -0.6f, 0.6f })
+                    RoomKit.Box(f, "Moldura", new Vector3(u + s, 5.6f, 0.06f), new Vector3(0.1f, 3.0f, 0.1f), wood, false);
+                RoomKit.Box(f, "Moldura_Base", new Vector3(u, 7.12f, 0.06f), new Vector3(1.3f, 0.12f, 0.12f), wood, false);
+                // Pedestal preso em cima; a estátua pende de ponta-cabeça (pés em cima, cabeça embaixo).
+                RoomKit.Box(f, "Pedestal", new Vector3(u, 6.85f, 0.25f), new Vector3(0.62f, 0.32f, 0.4f), marble, false);
+                RoomKit.Prim(PrimitiveType.Capsule, f, "Corpo", new Vector3(u, 5.95f, 0.25f), new Vector3(0.4f, 0.62f, 0.3f), marble);
+                RoomKit.Prim(PrimitiveType.Sphere, f, "Cabeca", new Vector3(u, 5.0f, 0.25f), Vector3.one * 0.3f, marble);
+                foreach (float s in new[] { -1f, 1f })
+                {
+                    var arm = RoomKit.Prim(PrimitiveType.Capsule, f, "Braco", new Vector3(u + s * 0.26f, 5.75f, 0.25f), new Vector3(0.1f, 0.38f, 0.1f), marble);
+                    arm.transform.localRotation = Quaternion.Euler(0f, 0f, s * 12f);
+                }
+            }
+        }
+
+        // ------------------------------------------------------------------ janelas altas com o céu embaixo (arco ogival embaixo)
+
+        static Texture2D InvertedSkyTextureCached;
+
         static void BuildWindows()
         {
-            var frame = kit.Mat("Salao_Caixilho", new Color(0.86f, 0.83f, 0.76f), 0.3f);
+            var frame = kit.Mat("Salao_Caixilho", new Color(0.78f, 0.75f, 0.68f), 0.3f);
             var skyMat = AssetDatabase.LoadAssetAtPath<Material>($"{Folder}/Materials/Salao_Janela.mat");
             if (skyMat == null)
             {
                 skyMat = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
                 AssetDatabase.CreateAsset(skyMat, $"{Folder}/Materials/Salao_Janela.mat");
             }
-            skyMat.SetTexture("_BaseMap", InvertedSkyTexture());
-            skyMat.SetColor("_BaseColor", Color.white);
+            if (InvertedSkyTextureCached == null) InvertedSkyTextureCached = InvertedSkyTexture();
+            skyMat.SetTexture("_BaseMap", InvertedSkyTextureCached);
+            skyMat.SetColor("_BaseColor", new Color(0.85f, 0.85f, 0.85f));
             EditorUtility.SetDirty(skyMat);
 
             var g = RoomKit.Child(root, "Janelas", Vector3.zero);
-            var windows = new[]
+            var spots = new List<(string wall, float u)>();
+            foreach (float z in BaysZ) spots.Add(("L", z));
+            spots.Add(("O", -3.5f));
+            spots.Add(("O", 3.5f));
+            foreach (var (wall, u) in spots)
             {
-                (new Vector3(HalfW - 0.02f, 1.9f, -3.6f), -90f), (new Vector3(HalfW - 0.02f, 1.9f, -0.4f), -90f),
-                (new Vector3(-HalfW + 0.02f, 1.9f, 0.1f), 90f),
-            };
-            foreach (var (pos, yaw) in windows)
-            {
-                var wnd = RoomKit.Child(g, "Janela", pos);
-                wnd.localRotation = Quaternion.Euler(0f, yaw, 0f); // +Z local para dentro da sala
-                var view = RoomKit.Prim(PrimitiveType.Quad, wnd, "Vista", new Vector3(0f, 0f, 0.005f), new Vector3(1.2f, 1.8f, 1f), skyMat);
+                var f = WallFrame(g, wall);
+                var wnd = RoomKit.Child(f, "Janela", new Vector3(wall == "O" ? -u : u, 4.6f, 0.02f));
+                var view = RoomKit.Prim(PrimitiveType.Quad, wnd, "Vista", new Vector3(0f, 0.15f, 0f), new Vector3(1.0f, 3.3f, 1f), skyMat);
                 view.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
                 view.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
                 foreach (var (n, p, s) in new[]
                 {
-                    ("Topo", new Vector3(0f, 0.95f, 0.04f), new Vector3(1.36f, 0.1f, 0.08f)), ("Base", new Vector3(0f, -0.95f, 0.04f), new Vector3(1.36f, 0.1f, 0.08f)),
-                    ("Esq", new Vector3(-0.63f, 0f, 0.04f), new Vector3(0.1f, 1.9f, 0.08f)), ("Dir", new Vector3(0.63f, 0f, 0.04f), new Vector3(0.1f, 1.9f, 0.08f)),
-                    ("Travessa", new Vector3(0f, 0f, 0.04f), new Vector3(1.2f, 0.05f, 0.05f)), ("Montante", new Vector3(0f, 0f, 0.04f), new Vector3(0.05f, 1.8f, 0.05f)),
+                    ("Topo", new Vector3(0f, 1.82f, 0.04f), new Vector3(1.16f, 0.1f, 0.08f)),
+                    ("Esq", new Vector3(-0.55f, 0.15f, 0.04f), new Vector3(0.08f, 3.4f, 0.08f)),
+                    ("Dir", new Vector3(0.55f, 0.15f, 0.04f), new Vector3(0.08f, 3.4f, 0.08f)),
+                    ("Montante", new Vector3(0f, 0.15f, 0.04f), new Vector3(0.05f, 3.3f, 0.05f)),
+                    ("Travessa", new Vector3(0f, 0.5f, 0.04f), new Vector3(1.0f, 0.05f, 0.05f)),
                 })
                     RoomKit.Box(wnd, n, p, s, frame, false);
-                // Luz fria entrando "de baixo para cima" (o céu está embaixo).
-                RoomKit.PointLight(wnd, "Luz_Janela", new Vector3(0f, -0.8f, 0.7f), new Color(0.7f, 0.82f, 1f), 1.6f, 6.5f);
+                // Arco ogival EMBAIXO: o caixilho fecha em ponta para baixo.
+                foreach (float side in new[] { -1f, 1f })
+                {
+                    var p0 = new Vector3(side * 0.55f, -1.2f, 0.04f);
+                    var p1 = new Vector3(0f, -1.6f, 0.04f);
+                    var d = p1 - p0;
+                    RoomKit.Box(wnd, "Arco", (p0 + p1) / 2f, new Vector3(d.magnitude, 0.08f, 0.08f), frame, false)
+                        .transform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
+                }
+                // Luz fria entrando de baixo para cima (o céu está embaixo).
+                RoomKit.PointLight(wnd, "Luz_Janela", new Vector3(0f, -1.3f, 0.8f), new Color(0.7f, 0.82f, 1f), 1.4f, 7f);
             }
         }
 
-        // ------------------------------------------------------------------ arandelas invertidas (suporte em cima, vela pendurada)
+        // ------------------------------------------------------------------ arandelas invertidas nas pilastras (dois níveis)
 
         static void BuildSconces()
         {
@@ -430,88 +578,181 @@ namespace Somnium.EditorTools.Rooms
             var wax = kit.Mat("Salao_Cera", new Color(0.93f, 0.9f, 0.8f), 0.2f);
             var flame = kit.Emissive("Salao_Chama", new Color(1f, 0.72f, 0.35f), 3f);
             var g = RoomKit.Child(root, "Arandelas", Vector3.zero);
-            var spots = new[]
+            foreach (string wall in new[] { "L", "O" })
             {
-                (new Vector3(-HalfW + 0.1f, 3.1f, -2.6f), 90f), (new Vector3(-HalfW + 0.1f, 3.1f, 4.6f), 90f),
-                (new Vector3(HalfW - 0.1f, 3.1f, -2f), -90f), (new Vector3(HalfW - 0.1f, 3.1f, 5.4f), -90f),
-            };
-            foreach (var (pos, yaw) in spots)
-            {
-                var s = RoomKit.Child(g, "Arandela", pos);
-                s.localRotation = Quaternion.Euler(0f, yaw, 0f);
-                RoomKit.Box(s, "Suporte", new Vector3(0f, 0.12f, 0.08f), new Vector3(0.06f, 0.24f, 0.16f), brass, false);
-                RoomKit.Prim(PrimitiveType.Cylinder, s, "Vela", new Vector3(0f, -0.08f, 0.16f), new Vector3(0.05f, 0.1f, 0.05f), wax);
-                RoomKit.Prim(PrimitiveType.Sphere, s, "Chama", new Vector3(0f, -0.22f, 0.16f), new Vector3(0.04f, 0.08f, 0.04f), flame);
-                RoomKit.PointLight(s, "Luz", new Vector3(0f, -0.3f, 0.4f), Warm, 2f, 6f);
+                var f = WallFrame(g, wall);
+                foreach (float z in PilastersZ)
+                {
+                    float u = wall == "O" ? -z : z;
+                    bool inner = Mathf.Abs(z) < 3f;
+                    foreach (float y in inner ? new[] { 3.1f, 6.4f } : new[] { 3.1f })
+                    {
+                        var s = RoomKit.Child(f, "Arandela", new Vector3(u, y, 0.22f));
+                        RoomKit.Box(s, "Suporte", new Vector3(0f, 0.14f, 0.08f), new Vector3(0.06f, 0.28f, 0.16f), brass, false);
+                        RoomKit.Prim(PrimitiveType.Cylinder, s, "Vela", new Vector3(0f, -0.08f, 0.16f), new Vector3(0.05f, 0.1f, 0.05f), wax);
+                        RoomKit.Prim(PrimitiveType.Sphere, s, "Chama", new Vector3(0f, -0.22f, 0.16f), new Vector3(0.04f, 0.08f, 0.04f), flame);
+                        RoomKit.PointLight(s, "Luz", new Vector3(0f, -0.3f, 0.45f), Warm, y > 5f ? 1.6f : 1.4f, 6f);
+                    }
+                }
             }
         }
 
-        // ------------------------------------------------------------------ lustre + mecanismo (Manivela → queda → Livro Antigo)
+        // ------------------------------------------------------------------ hera "crescendo para baixo" e rosas de ponta-cabeça
+
+        static void BuildIvyAndRoses()
+        {
+            var ivyMat = kit.Mat("Salao_Hera", new Color(0.12f, 0.24f, 0.1f), 0.25f);
+            var g = RoomKit.Child(root, "Hera_e_Rosas", Vector3.zero);
+            var rnd = new System.Random(21);
+            float R(float a, float b) => a + (float)rnd.NextDouble() * (b - a);
+
+            var parts = new List<Matrix4x4>();
+            var strands = new (string wall, float u)[]
+            {
+                ("L", -6.3f), ("L", -2.6f), ("L", 0.9f), ("L", 4.4f), ("L", 6.4f),
+                ("O", -6.2f), ("O", -0.9f), ("O", 2.5f), ("O", 6.3f),
+                ("N", -4.6f), ("N", 0.6f), ("N", 4.7f), ("S", -4.2f), ("S", 3.4f), ("S", -1.1f),
+            };
+            foreach (var (wall, uRaw) in strands)
+            {
+                var f = WallFrame(g, wall);
+                var frameM = Matrix4x4.TRS(f.localPosition, f.localRotation, Vector3.one);
+                float u = uRaw, len = R(1.8f, 4.2f);
+                float y0 = H - 0.05f;
+                int leaves = Mathf.RoundToInt(len / 0.11f);
+                // Talo
+                parts.Add(frameM * Matrix4x4.TRS(new Vector3(u, y0 - len / 2f, 0.05f), Quaternion.identity, new Vector3(0.025f, len, 0.02f)));
+                for (int i = 0; i < leaves; i++)
+                {
+                    float y = y0 - i * 0.11f - R(0f, 0.04f);
+                    float du = R(-0.16f, 0.16f) * Mathf.Min(1f, i / 6f + 0.3f);
+                    var rot = Quaternion.Euler(R(-20f, 20f), R(-20f, 20f), R(0f, 360f));
+                    float s = R(0.08f, 0.14f);
+                    parts.Add(frameM * Matrix4x4.TRS(new Vector3(u + du, y, 0.07f), rot, new Vector3(s, s * 0.85f, 0.015f)));
+                }
+            }
+            CombinedBoxes(g, "Hera", parts, ivyMat);
+
+            // Rosas em vasos sobre colunas, "presas" no assoalho lá em cima (cantos).
+            var stone = kit.Mat("Salao_MarmoreBranco", new Color(0.86f, 0.85f, 0.8f), 0.35f);
+            var vaseMat = kit.Mat("Salao_VasoRosas", new Color(0.32f, 0.3f, 0.28f), 0.4f);
+            var red = kit.Mat("Salao_RosaVermelha", new Color(0.55f, 0.08f, 0.14f), 0.3f);
+            var pink = kit.Mat("Salao_RosaRosa", new Color(0.82f, 0.45f, 0.52f), 0.3f);
+            var leaf = kit.Mat("Salao_FolhaRosa", new Color(0.14f, 0.26f, 0.12f), 0.2f);
+            foreach (var p in new[] { new Vector3(-4.2f, 0f, 6.2f), new Vector3(4.2f, 0f, 6.2f), new Vector3(4.2f, 0f, -6.2f), new Vector3(-4.2f, 0f, -6.2f) })
+            {
+                var st = RoomKit.Child(g, "Coluna_Rosas", p);
+                RoomKit.Box(st, "Coluna", new Vector3(0f, H - 0.55f, 0f), new Vector3(0.32f, 1.1f, 0.32f), stone, false);
+                RoomKit.Prim(PrimitiveType.Cylinder, st, "Vaso", new Vector3(0f, H - 1.3f, 0f), new Vector3(0.36f, 0.2f, 0.36f), vaseMat);
+                for (int i = 0; i < 9; i++)
+                {
+                    float a = i * 0.7f, r = 0.08f + (i % 3) * 0.06f;
+                    RoomKit.Prim(PrimitiveType.Sphere, st, "Rosa", new Vector3(Mathf.Cos(a) * r, H - 1.6f - (i % 2) * 0.1f, Mathf.Sin(a) * r), Vector3.one * R(0.1f, 0.14f), i % 3 == 0 ? pink : red);
+                    RoomKit.Box(st, "Folha", new Vector3(Mathf.Cos(a + 0.35f) * (r + 0.07f), H - 1.5f, Mathf.Sin(a + 0.35f) * (r + 0.07f)), new Vector3(0.1f, 0.02f, 0.06f), leaf, false)
+                        .transform.localRotation = Quaternion.Euler(R(-30f, 30f), a * Mathf.Rad2Deg, 0f);
+                }
+            }
+        }
+
+        // ------------------------------------------------------------------ lustre + corrente que SOBE do chão + guincho (Manivela → queda → Livro)
 
         static void BuildChandelierPuzzle()
         {
-            var gold = kit.Mat("Salao_Dourado", new Color(0.88f, 0.68f, 0.28f), 0.7f, 1f);
+            var gold = kit.Mat("Salao_DouradoFosco", new Color(0.86f, 0.66f, 0.3f), 0.55f, 0.35f); // fosco: metal puro fica preto com luz assada
             var crystal = kit.Emissive("Salao_Cristal", new Color(0.85f, 0.92f, 1f), 0.6f);
             var wax = kit.Mat("Salao_Cera", new Color(0.93f, 0.9f, 0.8f), 0.2f);
-            var iron = kit.Mat("Salao_Ferro", new Color(0.25f, 0.25f, 0.27f), 0.5f, 0.85f);
-            var chainMat = kit.Mat("Salao_Corrente", new Color(0.55f, 0.56f, 0.6f), 0.6f, 0.9f);
+            var flame = kit.Emissive("Salao_Chama", new Color(1f, 0.72f, 0.35f), 3f);
+            var iron = kit.Mat("Salao_FerroFosco", new Color(0.36f, 0.35f, 0.36f), 0.45f, 0.35f);
+            var chainMat = kit.Mat("Salao_Corrente", new Color(0.5f, 0.5f, 0.53f), 0.6f, 0.9f);
             var bookMat = kit.Mat("Salao_Livro", new Color(0.35f, 0.08f, 0.08f), 0.3f);
+            var dark = kit.Mat("Salao_Fuligem", new Color(0.05f, 0.04f, 0.04f), 0.1f);
             var g = RoomKit.Child(root, "Lustre_Puzzle", LustrePos);
 
-            // Lustre inteiro: pivô no ponto mais baixo (para parar ao tocar o chão).
-            const float bottom = H - 1.45f;
-            var intact = RoomKit.Child(g, "Lustre", new Vector3(0f, bottom, 0f));
+            // Lustre de ponta-cabeça: o gancho fica EMBAIXO (preso na corrente que vem do chão),
+            // as velas pendem com a chama para baixo e os cristais apontam para cima.
+            var intact = RoomKit.Child(g, "Lustre", new Vector3(0f, LustreBottom, 0f));
             intact.gameObject.AddComponent<NaoAssar>();
-            RoomKit.Prim(PrimitiveType.Cylinder, intact, "Haste", new Vector3(0f, 1.1f, 0f), new Vector3(0.06f, 0.35f, 0.06f), gold);
-            RoomKit.Prim(PrimitiveType.Cylinder, intact, "Aro", new Vector3(0f, 0.72f, 0f), new Vector3(1.7f, 0.04f, 1.7f), gold);
-            RoomKit.Prim(PrimitiveType.Sphere, intact, "Bola", new Vector3(0f, 0.2f, 0f), Vector3.one * 0.3f, gold);
-            RoomKit.Prim(PrimitiveType.Cylinder, intact, "Ponta", new Vector3(0f, 0.04f, 0f), new Vector3(0.05f, 0.08f, 0.05f), gold);
-            for (int i = 0; i < 8; i++)
+            RoomKit.Prim(PrimitiveType.Sphere, intact, "Gancho", new Vector3(0f, 0.04f, 0f), Vector3.one * 0.1f, gold);
+            RoomKit.Prim(PrimitiveType.Cylinder, intact, "Haste", new Vector3(0f, 0.6f, 0f), new Vector3(0.06f, 0.55f, 0.06f), gold);
+            RoomKit.Prim(PrimitiveType.Sphere, intact, "Bojo", new Vector3(0f, 1.25f, 0f), new Vector3(0.36f, 0.28f, 0.36f), gold);
+            foreach (var (y, r, n) in new[] { (0.55f, 1.0f, 12), (1.0f, 0.65f, 8) })
             {
-                float a = i * Mathf.PI / 4f;
-                var p = new Vector3(Mathf.Cos(a) * 0.8f, 0f, Mathf.Sin(a) * 0.8f);
-                RoomKit.Prim(PrimitiveType.Cylinder, intact, "Vela", p + new Vector3(0f, 0.58f, 0f), new Vector3(0.05f, 0.1f, 0.05f), wax);
-                for (int k = 0; k < 2; k++)
+                for (int k = 0; k < 20; k++) // aro vazado: segmentos em volta (um disco sólido tapava a vista)
                 {
-                    var q = new Vector3(Mathf.Cos(a + 0.4f) * (0.55f + k * 0.15f), 0.45f - k * 0.12f, Mathf.Sin(a + 0.4f) * (0.55f + k * 0.15f));
-                    RoomKit.Box(intact, "Cristal", q, new Vector3(0.04f, 0.16f, 0.04f), crystal, false);
+                    float ak = k * Mathf.PI * 2f / 20f;
+                    RoomKit.Box(intact, "Aro", new Vector3(Mathf.Cos(ak) * r, y, Mathf.Sin(ak) * r), new Vector3(0.035f, 0.035f, 2f * Mathf.PI * r / 20f + 0.02f), gold, false)
+                        .transform.localRotation = Quaternion.Euler(0f, -ak * Mathf.Rad2Deg, 0f);
+                }
+                for (int i = 0; i < n; i++)
+                {
+                    float a = i * Mathf.PI * 2f / n;
+                    var p = new Vector3(Mathf.Cos(a) * r, y, Mathf.Sin(a) * r);
+                    RoomKit.Prim(PrimitiveType.Cylinder, intact, "Vela", p + new Vector3(0f, -0.12f, 0f), new Vector3(0.045f, 0.09f, 0.045f), wax);
+                    var fl = RoomKit.Prim(PrimitiveType.Sphere, intact, "Chama", p + new Vector3(0f, -0.25f, 0f), new Vector3(0.035f, 0.07f, 0.035f), flame);
+                    fl.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
+                    var q = new Vector3(Mathf.Cos(a + 0.26f) * r * 0.85f, y + 0.14f, Mathf.Sin(a + 0.26f) * r * 0.85f);
+                    RoomKit.Box(intact, "Cristal", q, new Vector3(0.035f, 0.15f, 0.035f), crystal, false);
                 }
             }
-            // Correntes tensionadas do aro até o mecanismo na parede leste.
-            var chains = new List<GameObject>();
-            foreach (float dz in new[] { -0.35f, 0.35f })
-            {
-                var a = new Vector3(0.85f, H - 0.73f, dz);
-                var b = MechPos - LustrePos + new Vector3(-0.1f, 0.05f, dz * 0.2f);
-                var mid = (a + b) / 2f;
-                var ch = RoomKit.Box(g, "Corrente", mid, new Vector3(0.035f, 0.035f, Vector3.Distance(a, b)), chainMat, false);
-                ch.transform.localRotation = Quaternion.LookRotation(b - a);
-                ch.AddComponent<NaoAssar>();
-                chains.Add(ch);
-            }
+            // Luz do próprio lustre: em tempo real (ele cai e some), sob NaoAssar.
+            RoomKit.PointLight(intact, "Luz_Lustre", new Vector3(0f, 0.2f, 0f), Warm, 2.2f, 10f);
 
-            // Destroços no chão (aparecem depois da queda), com o Livro Antigo no meio.
+            // Roldana presa no chão, embaixo do lustre (no centro da rosácea).
+            RoomKit.Box(g, "Roldana_Base", new Vector3(0f, 0.09f, 0f), new Vector3(0.36f, 0.18f, 0.36f), iron, false);
+            RoomKit.Prim(PrimitiveType.Cylinder, g, "Roldana", new Vector3(0f, 0.3f, 0f), new Vector3(0.24f, 0.05f, 0.24f), iron).transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
+
+            // Guincho no chão, a ~2 m (assim o lustre não cai em cima de quem gira a manivela).
+            var winch = RoomKit.Child(root, "Guincho", WinchPos);
+            winch.localRotation = Quaternion.Euler(0f, 90f, 0f); // local +Z aponta para +X (a manivela fica do lado de fora)
+            RoomKit.Box(winch, "Base", new Vector3(0f, 0.04f, 0f), new Vector3(0.7f, 0.08f, 0.6f), iron, false);
+            foreach (float s in new[] { -0.22f, 0.22f })
+                RoomKit.Box(winch, "Lateral", new Vector3(0f, 0.32f, s), new Vector3(0.5f, 0.56f, 0.05f), iron, false);
+            RoomKit.Prim(PrimitiveType.Cylinder, winch, "Tambor", new Vector3(0f, 0.38f, 0f), new Vector3(0.3f, 0.2f, 0.3f), dark).transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            RoomKit.Prim(PrimitiveType.Cylinder, winch, "Corrente_Enrolada", new Vector3(0f, 0.38f, 0f), new Vector3(0.34f, 0.12f, 0.34f), chainMat).transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            RoomKit.Prim(PrimitiveType.Cylinder, winch, "Catraca", new Vector3(0f, 0.38f, 0.255f), new Vector3(0.22f, 0.01f, 0.22f), gold).transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            RoomKit.Box(winch, "Encaixe", new Vector3(0f, 0.38f, 0.265f), new Vector3(0.07f, 0.07f, 0.02f), dark, false);
+
+            // Manivela encaixada (aparece ao usar o item; gira em volta do eixo Z local).
+            var crank = RoomKit.Child(winch, "Manivela_Encaixada", new Vector3(0f, 0.38f, 0.27f));
+            RoomKit.Box(crank, "Eixo", new Vector3(0f, 0f, 0.12f), new Vector3(0.035f, 0.035f, 0.24f), iron, false);
+            RoomKit.Box(crank, "Braco", new Vector3(0.12f, 0f, 0.24f), new Vector3(0.24f, 0.035f, 0.03f), iron, false);
+            RoomKit.Prim(PrimitiveType.Cylinder, crank, "Cabo", new Vector3(0.23f, 0f, 0.3f), new Vector3(0.04f, 0.05f, 0.04f), kit.Mat("Salao_Lenha", new Color(0.18f, 0.1f, 0.05f), 0.1f))
+                .transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            crank.gameObject.AddComponent<NaoAssar>();
+            crank.gameObject.SetActive(false);
+
+            // Corrente: do tambor do guincho, pelo chão, até a roldana; e da roldana SUBINDO esticada até o lustre.
+            var drumTop = WinchPos - LustrePos + new Vector3(-0.05f, 0.5f, 0f);
+            var pulleyTop = new Vector3(0f, 0.42f, 0f);
+            var chainFloor = CombinedBoxes(g, "Corrente_Chao", ChainLinks(drumTop, pulleyTop + new Vector3(0.12f, 0f, 0f)), chainMat);
+            var chainUp = CombinedBoxes(g, "Corrente_Sobe", ChainLinks(pulleyTop, new Vector3(0f, LustreBottom, 0f)), chainMat);
+            chainFloor.AddComponent<NaoAssar>();
+            chainUp.AddComponent<NaoAssar>();
+
+            // Destroços no chão (aparecem depois da queda), com o Livro Antigo.
             var broken = RoomKit.Child(g, "Destrocos", Vector3.zero);
             broken.gameObject.AddComponent<NaoAssar>();
             var rnd = new System.Random(5);
             float R(float a, float c) => a + (float)rnd.NextDouble() * (c - a);
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 8; i++)
             {
-                float a = i * Mathf.PI / 3f;
-                var arc = RoomKit.Box(broken, "Pedaco_Aro", new Vector3(Mathf.Cos(a) * 0.75f, 0.04f, Mathf.Sin(a) * 0.75f), new Vector3(0.7f, 0.05f, 0.07f), gold, false);
-                arc.transform.localRotation = Quaternion.Euler(R(-12f, 12f), -a * Mathf.Rad2Deg + 90f + R(-15f, 15f), R(-8f, 8f));
+                float a = i * Mathf.PI / 4f;
+                var arc = RoomKit.Box(broken, "Pedaco_Aro", new Vector3(Mathf.Cos(a) * R(0.6f, 1.0f), 0.04f, Mathf.Sin(a) * R(0.6f, 1.0f)), new Vector3(0.75f, 0.04f, 0.06f), gold, false);
+                arc.transform.localRotation = Quaternion.Euler(R(-12f, 12f), -a * Mathf.Rad2Deg + 90f + R(-20f, 20f), R(-8f, 8f));
             }
-            for (int i = 0; i < 26; i++)
+            for (int i = 0; i < 40; i++)
             {
-                var c = RoomKit.Box(broken, "Caco", new Vector3(R(-1.4f, 1.4f), 0.02f, R(-1.4f, 1.4f)), new Vector3(0.04f, 0.04f, R(0.06f, 0.16f)), crystal, false);
+                var c = RoomKit.Box(broken, "Caco", new Vector3(R(-1.5f, 1.5f), 0.02f, R(-1.5f, 1.5f)), new Vector3(0.035f, 0.035f, R(0.06f, 0.15f)), crystal, false);
                 c.transform.localRotation = Quaternion.Euler(R(0f, 90f), R(0f, 360f), R(0f, 90f));
             }
-            for (int i = 0; i < 5; i++)
-                RoomKit.Prim(PrimitiveType.Cylinder, broken, "Vela_Caida", new Vector3(R(-1f, 1f), 0.05f, R(-1f, 1f)), new Vector3(0.05f, 0.1f, 0.05f), wax)
+            for (int i = 0; i < 10; i++)
+                RoomKit.Prim(PrimitiveType.Cylinder, broken, "Vela_Caida", new Vector3(R(-1.2f, 1.2f), 0.04f, R(-1.2f, 1.2f)), new Vector3(0.045f, 0.09f, 0.045f), wax)
                     .transform.localRotation = Quaternion.Euler(90f, R(0f, 360f), 0f);
-            RoomKit.Prim(PrimitiveType.Sphere, broken, "Bola_Amassada", new Vector3(-0.2f, 0.12f, 0.3f), new Vector3(0.3f, 0.22f, 0.3f), gold);
+            RoomKit.Prim(PrimitiveType.Sphere, broken, "Bojo_Amassado", new Vector3(-0.35f, 0.12f, 0.4f), new Vector3(0.36f, 0.2f, 0.32f), gold);
+            // Corrente frouxa caída no chão.
+            CombinedBoxes(broken, "Corrente_Caida", ChainLinks(new Vector3(0.1f, 0.03f, 0.1f), new Vector3(-0.9f, 0.03f, -0.8f)), chainMat);
 
-            var book = RoomKit.Child(broken, "Pickup_LivroAntigo", new Vector3(0.35f, 0.035f, -0.25f));
+            var book = RoomKit.Child(broken, "Pickup_LivroAntigo", new Vector3(0.5f, 0.035f, -0.45f));
             book.localRotation = Quaternion.Euler(0f, 28f, 0f);
             RoomKit.Box(book, "Livro", Vector3.zero, new Vector3(0.2f, 0.06f, 0.28f), bookMat, false);
             var bc = book.gameObject.AddComponent<BoxCollider>(); bc.size = new Vector3(0.36f, 0.3f, 0.42f); bc.isTrigger = true;
@@ -521,48 +762,25 @@ namespace Somnium.EditorTools.Rooms
             glint.AddComponent<Brilho>().maxScale = 0.1f;
             broken.gameObject.SetActive(false);
 
-            // Mecanismo de engrenagens na parede leste, com encaixe quadrado.
-            var mech = RoomKit.Child(root, "Mecanismo", MechPos);
-            mech.localRotation = Quaternion.Euler(0f, -90f, 0f); // +Z local para dentro da sala (-X)
-            RoomKit.Box(mech, "Placa", new Vector3(0f, 0f, -0.04f), new Vector3(0.7f, 0.7f, 0.06f), iron, false);
-            var gear = RoomKit.Prim(PrimitiveType.Cylinder, mech, "Engrenagem", new Vector3(0f, 0f, 0.01f), new Vector3(0.5f, 0.02f, 0.5f), gold);
-            gear.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-            for (int i = 0; i < 12; i++)
-            {
-                float a = i * Mathf.PI / 6f;
-                RoomKit.Box(mech, "Dente", new Vector3(Mathf.Cos(a) * 0.27f, Mathf.Sin(a) * 0.27f, 0.01f), new Vector3(0.06f, 0.06f, 0.04f), gold, false)
-                    .transform.localRotation = Quaternion.Euler(0f, 0f, a * Mathf.Rad2Deg);
-            }
-            RoomKit.Box(mech, "Encaixe", new Vector3(0f, 0f, 0.035f), new Vector3(0.07f, 0.07f, 0.02f), kit.Mat("Salao_Fuligem", new Color(0.05f, 0.04f, 0.04f), 0.1f), false);
-
-            // Manivela encaixada (aparece ao usar o item; gira em volta do eixo Z local).
-            var crank = RoomKit.Child(mech, "Manivela_Encaixada", new Vector3(0f, 0f, 0.04f));
-            RoomKit.Box(crank, "Eixo", new Vector3(0f, 0f, 0.14f), new Vector3(0.035f, 0.035f, 0.28f), iron, false);
-            RoomKit.Box(crank, "Braco", new Vector3(0.11f, 0f, 0.28f), new Vector3(0.22f, 0.035f, 0.03f), iron, false);
-            RoomKit.Prim(PrimitiveType.Cylinder, crank, "Cabo", new Vector3(0.22f, 0f, 0.34f), new Vector3(0.04f, 0.05f, 0.04f), kit.Mat("Salao_Lenha", new Color(0.18f, 0.1f, 0.05f), 0.1f))
-                .transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-            crank.gameObject.AddComponent<NaoAssar>();
-            crank.gameObject.SetActive(false);
-
             var fall = g.gameObject.AddComponent<LustreQueda>();
             fall.intact = intact;
             fall.broken = broken.gameObject;
-            fall.chains = chains.ToArray();
+            fall.chains = new[] { chainFloor, chainUp };
             fall.crank = crank;
             fall.floorY = 0f;
             fall.crashSound = RoomKit.Sound3D(intact.gameObject, CrashClip(), 1f, 3f, 40f);
-            fall.crankSound = RoomKit.Sound3D(mech.gameObject, CrankClip(), 0.8f, 2f, 20f);
+            fall.crankSound = RoomKit.Sound3D(winch.gameObject, CrankClip(), 0.8f, 2f, 20f);
 
-            var area = RoomKit.Volume(mech, "Trava_Mecanismo", new Vector3(0f, 0f, 0.2f), new Vector3(0.9f, 0.9f, 0.5f), true);
+            var area = RoomKit.Volume(winch, "Trava_Guincho", new Vector3(0f, 0.4f, 0.1f), new Vector3(0.9f, 0.9f, 0.9f), true);
             var lockComp = area.AddComponent<ItemLock>();
             lockComp.requiredItems = new List<ItemData> { RoomKit.Item("ManivelaQuadrada") };
             lockComp.consumeItems = true;
             lockComp.usablePromptText = "Encaixar a manivela";
-            lockComp.lockedMessage = "Um mecanismo de engrenagens com um encaixe quadrado. As correntes dele seguram o lustre lá em cima.";
-            lockComp.unlockedMessage = "A manivela encaixa. Você gira... as correntes se soltam!";
+            lockComp.lockedMessage = "Um guincho de ferro com um encaixe quadrado. A corrente dele passa pela roldana e sobe esticada até o lustre... para CIMA.";
+            lockComp.unlockedMessage = "A manivela encaixa. Você gira a catraca... a corrente afrouxa!";
             lockComp.activateOnUnlock = new[] { crank.gameObject };
             lockComp.saveId = "salao/mecanismo";
-            RoomKit.SetPrompt(lockComp, "Examinar o mecanismo");
+            RoomKit.SetPrompt(lockComp, "Examinar o guincho");
             UnityEventTools.AddPersistentListener(lockComp.onUnlocked, fall.Fall);
             UnityEventTools.AddPersistentListener(lockComp.onRestoredUnlocked, fall.SnapBroken);
         }
@@ -603,18 +821,20 @@ namespace Somnium.EditorTools.Rooms
             string dir = RoomKit.PreviewDir();
             EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
             Vector3 O(float x, float y, float z) => Origin + new Vector3(x, y, z);
+            var L = LustrePos;
             using (var s = new RoomKit.Shooter(dir, "salao", O(0f, 1.65f, -HalfD + 1.2f), false))
             {
-                s.Shot("1_entrada", O(0f, 1.65f, -HalfD + 1.2f), O(0f, 2.6f, 4f));
-                s.Shot("2_mesa_teto", O(1.8f, 1.65f, -4f), O(0f, 4.4f, -1.5f));
-                s.Shot("3_lareira", O(0.5f, 1.65f, 2.5f), O(0f, 4.2f, HalfD));
-                s.Shot("4_lustre_mecanismo", O(-2.5f, 1.65f, 0.5f), O(2.5f, 2.6f, 3.2f));
-                s.Shot("5_janela_relogio", O(1.5f, 1.65f, -2.5f), O(-HalfW, 2.4f, -2.5f));
-                s.Shot("6_janela_leste", O(-1f, 1.65f, -2f), O(HalfW, 1.9f, -2f));
+                s.Shot("1_entrada", O(0f, 1.65f, -HalfD + 1.2f), O(0f, 4.2f, 1f));
+                s.Shot("2_corrente_lustre", O(-2.8f, 1.65f, -4.6f), O(L.x, 3.6f, L.z));
+                s.Shot("3_guincho", O(3.7f, 1.65f, -3.6f), O(WinchPos.x - 0.4f, 0.3f, WinchPos.z));
+                s.Shot("4_mesa_lustre", O(1.6f, 1.65f, -4.8f), O(L.x, 7.2f, L.z));
+                s.Shot("5_lareira_estatuas", O(0f, 1.65f, 1.5f), O(0f, 5.6f, HalfD));
+                s.Shot("6_parede_leste", O(-2.5f, 1.65f, 0f), O(HalfW, 3.6f, 0f));
+                s.Shot("7_visao_geral", O(-4.2f, 1.65f, -6.2f), O(1.5f, 4.5f, 3f));
 
-                var g = GameObject.Find("SalaoInvertido/Lustre_Puzzle").GetComponent<LustreQueda>();
-                g.SnapBroken();
-                s.Shot("7_lustre_caido", O(-1.2f, 1.65f, 1f), O(0f, 0f, LustrePos.z));
+                var fall = GameObject.Find("SalaoInvertido/Lustre_Puzzle").GetComponent<LustreQueda>();
+                fall.SnapBroken();
+                s.Shot("8_lustre_caido", O(-1.8f, 1.65f, -4.3f), O(L.x, 0f, L.z));
             }
             EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
             Debug.Log($"[Somnium] Prévias do Salão Invertido salvas em {Path.GetFullPath(dir)}");
