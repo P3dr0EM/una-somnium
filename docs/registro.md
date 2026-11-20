@@ -270,3 +270,13 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 - `RoomKit`: `Combined(...)` (muitas peças numa malha só) e `ParticleMat(...)` (névoa transparente).
 - **Mesa de demonstração desligada** (`DemoTable = false`): todas as salas existem, e o jogo vai do Saguão até "Você acordou." sem atalhos.
 - Debug: **Receber Herbicida**. `TodasSalas` agora gera também a Estufa.
+- **PR #6 aceito** (merge `da3545c`): jogo completo na `main`. Branch nova **`feature/ajustes-finais`**.
+
+### Ajustes do teste completo (Estufa)
+- **Não dava para pegar a Chave 3 e a Metade B.** O fundo da taça era um cilindro do Unity, cujo colisor padrão é uma **cápsula**. Achatada, ela vira uma esfera invisível de ~75 cm que tapava os itens. Agora o colisor é uma caixa fina (lição: em `RoomKit.Prim` com colisor, cilindros achatados precisam de `BoxCollider`).
+- **A planta "flutuava".** O modelo Plant42 era assentado pelo ponto mais baixo (as vinhas penduradas), não pelo caule. Por decisão do P3DR0EM, ele foi trocado por uma **planta procedural** estilo RE:
+  - caule grosso saindo da água e curvando sobre a taça;
+  - bulbo de pétalas carnudas fechadas com veios claros;
+  - folhas boiando, raízes até a borda e bolsas pulsando no bulbo.
+  - Ao murchar, desaba para dentro da água. O `plant42.fbx` continua no projeto, sem uso.
+- Guia de apresentação reescrito para o jogo completo: `docs/guias/demo-apresentacao.md` (roteiro de ~10 min, 6 entradas em salas).
