@@ -181,3 +181,92 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 3. **"resource style/Theme.AppCompat.NoActionBar not found"** (Cardboard). Os templates de Gradle (`mainTemplate.gradle`, com as dependências do Cardboard: appcompat, play-services-vision, material, protobuf) tinham ido parar em `Assets/extras/Plugins/Android` na reorganização de pastas.
    - O Unity só lê templates em **`Assets/Plugins/Android`**. Os arquivos voltaram para lá.
 4. Os builds alteram sozinhos `ProjectSettings` e os assets do URP (XR nos "preloaded assets", filtros de shader). Essas mudanças foram descartadas.
+- **PR #5 aceito** (merge `7cba40b`): versão de demonstração na `main`.
+
+## 2026-11-18
+
+### Retorno da apresentação (APK no Cardboard)
+- Experiência boa no geral; mecânicas, inventário e textos funcionam bem em VR.
+- **Câmera baixa ("visão de criança")**. Causa: o `TrackedPoseDriver` da câmera (na `persistencia`) estava em "posição e rotação". O Cardboard só rastreia rotação, e a posição da cabeça zerava a altura da câmera (~0,95 m em vez de ~1,76 m). Correção: **só rotação** (`m_TrackingType: 1`). No PC não aparecia, porque sem headset o driver não mexe na posição.
+- **Iluminação do Saguão ruim no celular**. Pelos prints:
+  - *banding* forte: anéis de cor com faixas verde-oliva e rosa sobre o vermelho, perto das arandelas e do lustre;
+  - sem sombras, e contraste extremo.
+- Correções:
+  - `Mobile_RPAsset`: **HDR desligado** e **conversão sRGB aproximada desligada** (precisão de cor nos escuros).
+  - **Saguão com luz assada (baked)**: lightmaps com sombras macias, rebatimento e oclusão, mais Light Probes (126) para o que se move e uma sonda de reflexo para os metais. Bake em ~6 s.
+  - Mais luz: lustre 7 → 11, luz de preenchimento no teto, arandelas 2,2 → 3,2, ambiente e teto mais claros, neblina mais leve.
+- `RoomKit.BakeLighting(...)`: usado pelas próximas salas.
+- Ajuste do P3DR0EM no `Brilho`: pisca mais vezes (intervalo de 1,7 s, duração de 0,6 s).
+
+### Salão Invertido (blockout jogável, luz assada)
+- Gerador `Rooms/03_SalaoInvertido/Editor/SalaoBuilder.cs`, com os menus **Somnium → Salas → Abrir / Gerar / Renderizar prévias do Salão Invertido**. Cena em x = 4000.
+- Sala de jantar vitoriana de ponta-cabeça: o jogador anda no forro de gesso; assoalho, tapete, mesa posta, cadeiras, aparador, lareira e relógio ficam lá em cima.
+  - O lambri de madeira fica no alto, e a sanca de gesso junto ao chão.
+- Detalhes surreais:
+  - **lareira com o fogo para baixo** (`FogoTremulo`, luz em tempo real);
+  - **velas invertidas** (candelabro e arandelas);
+  - **janelas com o céu embaixo** (textura gerada);
+  - **retratos de cabeça para baixo**;
+  - **relógio com o pêndulo para cima** (`PenduloInvertido`);
+  - a porta tem a maçaneta e a placa de ponta-cabeça.
+- **Puzzle**:
+  - **Manivela Quadrada** no mecanismo da parede leste: a manivela aparece e gira, as correntes somem e o lustre cai em queda livre e quebra (`LustreQueda`).
+  - Nos destroços está o **Livro Antigo** (inspeção 3D → Alicate).
+  - Sons sintetizados: catraca e vidro quebrando.
+- Novo `NaoAssar` (marca objetos que se movem para o bake ignorar). O bake do `RoomKit` também deixa em tempo real as luzes desses objetos (o fogo).
+- A **mesa de demonstração** do Saguão não tem mais o Livro. A porta do Salão no Saguão agora funciona.
+- Debug: **Receber Manivela Quadrada**.
+
+### Cor e iluminação no Cardboard (2º teste)
+- **Altura da câmera ok** depois da correção.
+- **Cores ainda ruins no Saguão.** Os prints mostraram *posterização* forte, mesmo com a luz assada: poucos tons, faixas verde-oliva e amarelas no vermelho. Diagnóstico:
+  - projeto em espaço de cor **Linear** gravando em 8 bits no Cardboard: sobram pouquíssimos tons nos escuros;
+  - em vermelho escuro, o verde e o azul "pulam" de tom em momentos diferentes.
+- **Correção: espaço de cor Gamma** (padrão em VR mobile).
+  - Todas as salas regeradas e reassadas.
+  - Novo menu **Somnium → Salas → Gerar TODAS as salas** (`TodasSalas.cs`).
+- **Direção de arte do Saguão** seguindo as referências do P3DR0EM (mansão de Resident Evil, `docs/references/reference1.jpg`, `reference5.webp`):
+  - lambri de madeira escura até 1,4 m com friso;
+  - papel de parede vinho-amarronzado dessaturado;
+  - tapete verde-escuro; mármore envelhecido; teto de madeira;
+  - **cúpulas acesas no lustre** (ponto focal);
+  - penumbra quente com poças de luz.
+- Intensidades recalibradas para Gamma:
+  - Saguão: lustre 6,5, teto 1,6, arandelas 1,9, ambiente 0,14;
+  - Salão: candelabro 1,0, janelas 1,6;
+  - rebatimento 1,1.
+- Colinas XP em Gamma: grama menos saturada, sol 1,15, porta menos branca.
+- **Retorno do 3º teste:** cores muito melhores no Cardboard (Gamma).
+- Pedido de **Salão Invertido v2**: corrente saindo do chão e subindo até o lustre (dúvida "quem está de ponta-cabeça"), guincho no chão, sala de ~9 m, arcos e pilastras góticos, estátuas invertidas, hera e rosas. Benchmark em `docs/notas/benchmark-salao-invertido.md`; especificação em `docs/notas/salao-invertido-v2-spec.md`.
+
+### Salão Invertido v2
+- **Pé-direito de 9 m**: a mobília lá em cima e o lustre a ~6 m (queda de ~1,1 s).
+- **A corrente sobe do chão.** Ela sai de uma **roldana** no centro da rosácea e sobe esticada até o lustre, o elemento "impossível" que deixa a dúvida sobre quem está de ponta-cabeça. No chão, ela corre até o **guincho**, a 2 m.
+  - A Manivela vai no guincho, e o lustre não cai em cima de quem gira (conforto em VR).
+- Lustre de ponta-cabeça: gancho embaixo, dois anéis vazados, velas pendendo com a chama para baixo e cristais para cima; luz própria em tempo real (some quando cai).
+- Elementos das referências (`diningHall.jpg`, `dinig hall2.jpg`):
+  - pilastras e **arcos ogivais invertidos** (capitel embaixo, base em cima, arco com a ponta para baixo);
+  - **estátuas de cabeça para baixo** em nichos ao lado da lareira;
+  - janelas altas com arco embaixo;
+  - **hera** descendo do assoalho lá em cima (uma malha combinada);
+  - **rosas** em vasos invertidos nos cantos.
+- Arandelas em dois níveis nas pilastras.
+- Dourado e ferro **foscos** (metal puro fica preto com luz assada).
+- Benchmark de jogos de referência: `docs/notas/benchmark-salao-invertido.md`.
+
+## 2026-11-19
+
+### Estufa (última sala) e jogo completo
+- Referências do P3DR0EM: o pátio-estufa e a planta do Resident Evil original (`docs/references/plant1-3.png`).
+- Gerador `Rooms/04_Estufa/Editor/EstufaBuilder.cs`, com os menus **Somnium → Salas → Abrir / Gerar / Renderizar prévias da Estufa**. Cena em x = 5000.
+  - Treliça escura no teto com o céu noturno e o **luar** (sombras da treliça assadas no chão); paredes de reboco úmido com musgo, escorridos e muita **hera** (malha combinada).
+  - Canteiros de tijolo com mato seco, banco de ripas, carretel de mangueira e porta do fundo trancada por raízes.
+- **Planta**: o modelo **Plant42** do grupo (exportado para FBX) no tanque da fonte, com **7 tentáculos procedurais** enrolados na taça.
+  - Bioluminescência discreta: **bolsas verdes que pulsam** e uma luz verde fraca (`PulsoBrilho`).
+  - A Chave 3 e a Metade B ficam na taça, protegidas por um bloqueio de tentáculos.
+- **Puzzle**:
+  - **Cartucho Vazio** na bancada (com o bilhete do jardineiro), vira Herbicida no galão do Escritório.
+  - O Herbicida vai no **painel de irrigação**: o manômetro gira, 3 **sprinklers** soltam névoa (partículas) com chiado, e a planta **murcha** (escurece, tomba, apaga; `PlantaMurcha`, `Irrigacao`).
+- `RoomKit`: `Combined(...)` (muitas peças numa malha só) e `ParticleMat(...)` (névoa transparente).
+- **Mesa de demonstração desligada** (`DemoTable = false`): todas as salas existem, e o jogo vai do Saguão até "Você acordou." sem atalhos.
+- Debug: **Receber Herbicida**. `TodasSalas` agora gera também a Estufa.

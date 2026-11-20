@@ -9,9 +9,9 @@ namespace Somnium.Interaction
     public class Brilho : MonoBehaviour
     {
         [Tooltip("Intervalo entre os brilhos, em segundos.")]
-        public float interval = 2.6f;
+        public float interval = 1.7f;
         [Tooltip("Duração de cada brilho, em segundos.")]
-        public float duration = 0.45f;
+        public float duration = 0.6f;
         public float maxScale = 1f;
 
         float offset;

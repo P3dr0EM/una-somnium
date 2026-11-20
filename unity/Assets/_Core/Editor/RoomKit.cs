@@ -305,6 +305,239 @@ namespace Somnium.EditorTools.Rooms
             }
         }
 
+        // ---------------- luz "baked" (assada em textura)
+
+        /// <summary>
+        /// Componentes que indicam objeto que se move, aparece/some ou anima: não entram como estáticos no bake
+        /// (recebem luz pelas Light Probes).
+        /// </summary>
+        static readonly System.Type[] DynamicMarkers =
+        {
+            typeof(Itr_Door), typeof(ItemPickup), typeof(Somnium.Interaction.GirarAoAtivar),
+            typeof(Somnium.Interaction.Brilho), typeof(Rigidbody), typeof(Somnium.Core.NaoAssar),
+        };
+
+        static bool IsDynamic(Transform t, Transform root)
+        {
+            for (var p = t; p != null; p = p.parent)
+            {
+                foreach (var type in DynamicMarkers)
+                    if (p.GetComponent(type) != null) return true;
+                if (p.GetComponent("GatoTeleporte") != null) return true;
+                if (p == root) break;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Assa a luz da sala: as luzes ativas viram "Baked" (luz direta, sombras e rebatimento gravados em lightmap),
+        /// a geometria fixa vira estática e uma grade de Light Probes ilumina o que se move.
+        /// Bom para o celular: sombras sem custo e sem o limite de 4 luzes por objeto.
+        /// Chame depois de montar a cena e antes de salvar. Exige a cena já salva em <paramref name="scenePath"/>.
+        /// </summary>
+        public static bool BakeLighting(Transform root, string scenePath, Bounds probeArea, float probeSpacing,
+                                        float texelsPerUnit = 10f, int maxLightmapSize = 1024)
+        {
+            // 1) Estáticos: renderers ativos que não se movem.
+            int stat = 0, dyn = 0;
+            foreach (var r in root.GetComponentsInChildren<MeshRenderer>(false))
+            {
+                if (r.GetComponentInParent<Canvas>() != null) continue;
+                bool dynamic = IsDynamic(r.transform, root);
+                var flags = GameObjectUtility.GetStaticEditorFlags(r.gameObject);
+                if (dynamic)
+                {
+                    GameObjectUtility.SetStaticEditorFlags(r.gameObject, flags & ~StaticEditorFlags.ContributeGI);
+                    dyn++;
+                }
+                else
+                {
+                    GameObjectUtility.SetStaticEditorFlags(r.gameObject, flags | StaticEditorFlags.ContributeGI | StaticEditorFlags.BatchingStatic);
+                    r.receiveGI = ReceiveGI.Lightmaps;
+                    stat++;
+                }
+            }
+
+            // 2) Luzes ativas viram Baked (as desligadas, como a luz do final, continuam em tempo real).
+            int baked = 0;
+            foreach (var l in root.GetComponentsInChildren<Light>(false))
+            {
+                if (IsDynamic(l.transform, root)) continue; // ex.: fogo da lareira, que tremula em tempo real
+                l.lightmapBakeType = LightmapBakeType.Baked;
+                if (l.type == LightType.Point && l.shadows == LightShadows.None) l.shadows = LightShadows.Soft;
+                l.shapeRadius = 0.15f;
+                baked++;
+            }
+
+            // 3) Light Probes em grade (iluminam portas que abrem, itens, o jogador segurando coisas...).
+            var probesGo = new GameObject("LightProbes");
+            probesGo.transform.SetParent(root, false);
+            var group = probesGo.AddComponent<LightProbeGroup>();
+            var pts = new List<Vector3>();
+            for (float x = probeArea.min.x; x <= probeArea.max.x + 0.01f; x += probeSpacing)
+                for (float y = probeArea.min.y; y <= probeArea.max.y + 0.01f; y += probeSpacing)
+                    for (float z = probeArea.min.z; z <= probeArea.max.z + 0.01f; z += probeSpacing)
+                        pts.Add(new Vector3(x, y, z));
+            group.probePositions = pts.ToArray();
+
+            // Sonda de reflexo assada: sem ela, materiais metálicos (dourado, ferro) ficam pretos com luz baked.
+            var reflGo = new GameObject("ReflexoAmbiente");
+            reflGo.transform.SetParent(root, false);
+            reflGo.transform.localPosition = probeArea.center;
+            var refl = reflGo.AddComponent<ReflectionProbe>();
+            refl.mode = ReflectionProbeMode.Baked;
+            refl.size = probeArea.size + Vector3.one;
+            refl.boxProjection = true;
+            refl.resolution = 128;
+            refl.hdr = false;
+            // Fundo da captura = ambiente da sala (sem isso entra um "céu" azul padrão e as bordas metálicas ficam azuladas).
+            refl.clearFlags = UnityEngine.Rendering.ReflectionProbeClearFlags.SolidColor;
+            refl.backgroundColor = RenderSettings.ambientLight;
+
+            // 4) Configuração do bake (salva ao lado da cena).
+            var ls = new LightingSettings
+            {
+                name = Path.GetFileNameWithoutExtension(scenePath) + "_Iluminacao",
+                bakedGI = true,
+                realtimeGI = false,
+                lightmapper = LightingSettings.Lightmapper.ProgressiveGPU,
+                lightmapResolution = texelsPerUnit,
+                lightmapMaxSize = maxLightmapSize,
+                lightmapPadding = 2,
+                directionalityMode = LightmapsMode.NonDirectional,
+                lightmapCompression = LightmapCompression.NormalQuality,
+                maxBounces = 3,
+                indirectScale = 1.1f,
+                directSampleCount = 32,
+                indirectSampleCount = 256,
+                environmentSampleCount = 128,
+                filteringMode = LightingSettings.FilterMode.Auto,
+                ao = true,
+                aoMaxDistance = 1f,
+                mixedBakeMode = MixedLightingMode.IndirectOnly,
+            };
+            string lsPath = Path.ChangeExtension(scenePath, null) + "_Iluminacao.lighting";
+            AssetDatabase.DeleteAsset(lsPath);
+            AssetDatabase.CreateAsset(ls, lsPath);
+            Lightmapping.lightingSettings = ls;
+
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            bool ok = Lightmapping.Bake();
+            Debug.Log($"[Somnium] Bake de {Path.GetFileName(scenePath)}: {(ok ? "ok" : "FALHOU")} em {sw.Elapsed.TotalSeconds:0}s " +
+                      $"({stat} estáticos, {dyn} dinâmicos, {baked} luzes, {pts.Count} probes, {LightmapSettings.lightmaps.Length} lightmap(s))");
+            return ok;
+        }
+
+        // ---------------- malhas combinadas
+
+        /// <summary>
+        /// Junta muitas cópias de um primitivo (cubo, esfera, cápsula...) numa malha só: um objeto e uma chamada de desenho.
+        /// Ideal para hera, grama, tentáculos, elos de corrente. As matrizes são locais ao <paramref name="parent"/>.
+        /// </summary>
+        public static GameObject Combined(Transform parent, string name, PrimitiveType type, List<Matrix4x4> parts, Material mat)
+        {
+            var tmp = GameObject.CreatePrimitive(type);
+            var primMesh = tmp.GetComponent<MeshFilter>().sharedMesh;
+            Object.DestroyImmediate(tmp);
+            var ci = new CombineInstance[parts.Count];
+            for (int i = 0; i < parts.Count; i++) ci[i] = new CombineInstance { mesh = primMesh, transform = parts[i] };
+            var mesh = new Mesh { name = name, indexFormat = IndexFormat.UInt32 };
+            mesh.CombineMeshes(ci, true, true);
+            mesh.RecalculateBounds();
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            go.AddComponent<MeshRenderer>().sharedMaterial = mat;
+            return go;
+        }
+
+        /// <summary>Material de partícula transparente (URP), com uma textura de bolinha suave gerada.</summary>
+        public Material ParticleMat(string name, Color color)
+        {
+            string texPath = $"{matFolder}/{name}_Particula.png";
+            const int s = 64;
+            var tex = new Texture2D(s, s, TextureFormat.RGBA32, false);
+            for (int y = 0; y < s; y++)
+                for (int x = 0; x < s; x++)
+                {
+                    float dx = (x + 0.5f) / s * 2f - 1f, dy = (y + 0.5f) / s * 2f - 1f;
+                    float a = Mathf.Clamp01(1f - Mathf.Sqrt(dx * dx + dy * dy));
+                    tex.SetPixel(x, y, new Color(1f, 1f, 1f, a * a));
+                }
+            tex.Apply();
+            File.WriteAllBytes(texPath, tex.EncodeToPNG());
+            Object.DestroyImmediate(tex);
+            AssetDatabase.ImportAsset(texPath);
+            var imp = (TextureImporter)AssetImporter.GetAtPath(texPath);
+            imp.alphaIsTransparency = true;
+            imp.wrapMode = TextureWrapMode.Clamp;
+            imp.SaveAndReimport();
+
+            string path = $"{matFolder}/{name}.mat";
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat == null)
+            {
+                mat = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
+                AssetDatabase.CreateAsset(mat, path);
+            }
+            mat.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(texPath));
+            mat.SetColor("_BaseColor", color);
+            mat.SetFloat("_Surface", 1f);
+            mat.SetFloat("_Blend", 0f);
+            mat.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
+            mat.SetFloat("_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
+            mat.SetFloat("_ZWrite", 0f);
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            mat.renderQueue = (int)RenderQueue.Transparent;
+            EditorUtility.SetDirty(mat);
+            return mat;
+        }
+
+        // ---------------- som sintetizado
+
+        /// <summary>Gera um .wav mono 16 bits a partir de uma função f(t em segundos) → amostra (-1..1), normaliza e importa.</summary>
+        public static AudioClip SynthClip(string path, float seconds, System.Func<float, System.Random, float> f, int sampleRate = 44100, int seed = 1)
+        {
+            EnsureFolder(Path.GetDirectoryName(path).Replace('\\', '/'));
+            int n = (int)(seconds * sampleRate);
+            var data = new float[n];
+            var rnd = new System.Random(seed);
+            float peak = 1e-4f;
+            for (int i = 0; i < n; i++)
+            {
+                data[i] = f((float)i / sampleRate, rnd);
+                peak = Mathf.Max(peak, Mathf.Abs(data[i]));
+            }
+            using (var fs = new FileStream(path, FileMode.Create))
+            using (var w = new BinaryWriter(fs))
+            {
+                int bytes = n * 2;
+                w.Write(System.Text.Encoding.ASCII.GetBytes("RIFF")); w.Write(36 + bytes);
+                w.Write(System.Text.Encoding.ASCII.GetBytes("WAVE")); w.Write(System.Text.Encoding.ASCII.GetBytes("fmt "));
+                w.Write(16); w.Write((short)1); w.Write((short)1); w.Write(sampleRate); w.Write(sampleRate * 2);
+                w.Write((short)2); w.Write((short)16);
+                w.Write(System.Text.Encoding.ASCII.GetBytes("data")); w.Write(bytes);
+                foreach (var s in data) w.Write((short)Mathf.Clamp(s / peak * 0.85f * 32767f, -32768f, 32767f));
+            }
+            AssetDatabase.ImportAsset(path);
+            return AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+        }
+
+        /// <summary>AudioSource 3D (som vem da posição do objeto), sem tocar ao iniciar.</summary>
+        public static AudioSource Sound3D(GameObject go, AudioClip clip, float volume = 1f, float minDistance = 2f, float maxDistance = 30f)
+        {
+            var s = go.AddComponent<AudioSource>();
+            s.clip = clip;
+            s.playOnAwake = false;
+            s.spatialBlend = 1f;
+            s.rolloffMode = AudioRolloffMode.Logarithmic;
+            s.minDistance = minDistance;
+            s.maxDistance = maxDistance;
+            s.dopplerLevel = 0f;
+            s.volume = volume;
+            return s;
+        }
+
         // ---------------- projeto
 
         public static void AddToBuildSettings(string path)
