@@ -280,3 +280,13 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
   - folhas boiando, raízes até a borda e bolsas pulsando no bulbo.
   - Ao murchar, desaba para dentro da água. O `plant42.fbx` continua no projeto, sem uso.
 - Guia de apresentação reescrito para o jogo completo: `docs/guias/demo-apresentacao.md` (roteiro de ~10 min, 6 entradas em salas).
+
+### Retorno do teste completo: estátuas e planta mesclada
+- **Estátuas** baixadas pelo P3DR0EM (CC BY): `low-poly-statue` (FBX em texto, ~330 triângulos) e `polygonal-venus-statue-low-poly` (~2 mil triângulos), em `Rooms/03_SalaoInvertido/Models`.
+  - Substituem os blocos nos nichos do Salão Invertido, **penduradas de cabeça para baixo** sob o pedestal, em mármore branco.
+  - Créditos em `CREDITOS.md`; faltam os autores e os links (pendência P11).
+- **Planta mesclada**: a **coroa de pétalas abertas** da Plant42 (só essa parte, separada por material do `Plant42.blend` e exportada como `plant42_flor.fbx`) no topo do caule procedural, com miolo, estames e bolsas brilhando.
+  - As pétalas do modelo são de uma face só: material de **duas faces** (`_Cull` 0).
+- Os zips baixados ficam fora do git (`models/*.zip`).
+- **Créditos CC BY completos** (P11): gato (boud), Low-Poly Statue (Nikita Borovkov) e Venus (Enlil Scan), em `CREDITOS.md`.
+- **Pedestais das estátuas** refeitos: pedestal clássico de ponta-cabeça preso no alto do nicho (base larga com moldura, mísulas na parede, fuste com frisos e plinto embaixo, onde ficam os pés). A **Vênus** foi girada 180° (estava de frente para a parede).

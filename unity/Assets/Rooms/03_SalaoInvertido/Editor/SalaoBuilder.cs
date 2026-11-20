@@ -499,23 +499,54 @@ namespace Somnium.EditorTools.Rooms
             var niche = kit.Mat("Salao_Nicho", new Color(0.07f, 0.05f, 0.05f), 0.2f);
             var wood = kit.Mat("Salao_MadeiraEscura", new Color(0.16f, 0.09f, 0.05f), 0.4f);
             var f = WallFrame(RoomKit.Child(root, "Estatuas", Vector3.zero), "N");
-            foreach (float u in new[] { -3.3f, 3.3f })
+            // Modelos baixados pelo P3DR0EM (créditos em CREDITOS.md). Penduradas de cabeça para baixo, presas no pedestal lá em cima.
+            var models = new[] { (u: -3.3f, path: $"{Folder}/Models/estatua_venus.fbx", yaw: StatueYawVenus), (u: 3.3f, path: $"{Folder}/Models/estatua_classica.fbx", yaw: StatueYawClassica) };
+            foreach (var (u, path, yaw) in models)
             {
                 RoomKit.Box(f, "Nicho", new Vector3(u, 5.6f, 0.02f), new Vector3(1.1f, 2.9f, 0.03f), niche, false);
                 foreach (float s in new[] { -0.6f, 0.6f })
                     RoomKit.Box(f, "Moldura", new Vector3(u + s, 5.6f, 0.06f), new Vector3(0.1f, 3.0f, 0.1f), wood, false);
                 RoomKit.Box(f, "Moldura_Base", new Vector3(u, 7.12f, 0.06f), new Vector3(1.3f, 0.12f, 0.12f), wood, false);
-                // Pedestal preso em cima; a estátua pende de ponta-cabeça (pés em cima, cabeça embaixo).
-                RoomKit.Box(f, "Pedestal", new Vector3(u, 6.85f, 0.25f), new Vector3(0.62f, 0.32f, 0.4f), marble, false);
+                BuildInvertedPedestal(f, u, marble);
+                var statue = RoomKit.Model(path, f, "Estatua", new Vector3(u, PedestalFootY, 0.3f), yaw, 2.05f, true, marble);
+                if (statue != null)
+                {
+                    // De ponta-cabeça: o modelo foi assentado com os pés no pivô; girar 180° em Z faz ele pender para baixo.
+                    statue.transform.localRotation = Quaternion.Euler(0f, 0f, 180f) * statue.transform.localRotation;
+                    continue;
+                }
                 RoomKit.Prim(PrimitiveType.Capsule, f, "Corpo", new Vector3(u, 5.95f, 0.25f), new Vector3(0.4f, 0.62f, 0.3f), marble);
                 RoomKit.Prim(PrimitiveType.Sphere, f, "Cabeca", new Vector3(u, 5.0f, 0.25f), Vector3.one * 0.3f, marble);
-                foreach (float s in new[] { -1f, 1f })
-                {
-                    var arm = RoomKit.Prim(PrimitiveType.Capsule, f, "Braco", new Vector3(u + s * 0.26f, 5.75f, 0.25f), new Vector3(0.1f, 0.38f, 0.1f), marble);
-                    arm.transform.localRotation = Quaternion.Euler(0f, 0f, s * 12f);
-                }
             }
         }
+
+        /// <summary>Altura onde ficam os pés da estátua (embaixo do plinto do pedestal invertido).</summary>
+        const float PedestalFootY = 6.42f;
+
+        /// <summary>
+        /// Pedestal clássico de ponta-cabeça, preso no alto do nicho: base larga com moldura encostada no topo,
+        /// fuste com frisos e o plinto embaixo, onde os pés da estátua "pisam".
+        /// </summary>
+        static void BuildInvertedPedestal(Transform f, float u, Material marble)
+        {
+            var trim = kit.Mat("Salao_MarmoreEscuro", new Color(0.36f, 0.33f, 0.3f), 0.45f);
+            var p = RoomKit.Child(f, "Pedestal", new Vector3(u, 0f, 0.3f));
+            // Base larga encostada no topo do nicho, com degrau de moldura (em cima = "chão" da estátua).
+            RoomKit.Box(p, "Base", new Vector3(0f, 7.0f, -0.02f), new Vector3(0.9f, 0.14f, 0.6f), trim, false);
+            RoomKit.Box(p, "Base_Degrau", new Vector3(0f, 6.88f, 0f), new Vector3(0.76f, 0.1f, 0.52f), marble, false);
+            // Fuste com dois frisos.
+            RoomKit.Box(p, "Fuste", new Vector3(0f, 6.66f, 0f), new Vector3(0.52f, 0.36f, 0.4f), marble, false);
+            RoomKit.Box(p, "Friso_A", new Vector3(0f, 6.8f, 0f), new Vector3(0.58f, 0.035f, 0.46f), trim, false);
+            RoomKit.Box(p, "Friso_B", new Vector3(0f, 6.52f, 0f), new Vector3(0.58f, 0.035f, 0.46f), trim, false);
+            // Plinto (embaixo): onde a estátua se apoia.
+            RoomKit.Box(p, "Plinto", new Vector3(0f, 6.46f, 0f), new Vector3(0.66f, 0.08f, 0.5f), marble, false);
+            // Mísulas ligando a base à parede do nicho (deixa claro que está preso).
+            foreach (float s in new[] { -0.36f, 0.36f })
+                RoomKit.Box(p, "Misula", new Vector3(s, 6.8f, -0.2f), new Vector3(0.1f, 0.34f, 0.18f), trim, false);
+        }
+
+        /// <summary>Giro (graus) para cada estátua ficar de frente para a sala. Ajustado olhando as prévias.</summary>
+        const float StatueYawVenus = 180f, StatueYawClassica = 0f; // a Vênus vem do modelo de costas: 180° para olhar a sala
 
         // ------------------------------------------------------------------ janelas altas com o céu embaixo (arco ogival embaixo)
 
@@ -831,6 +862,8 @@ namespace Somnium.EditorTools.Rooms
                 s.Shot("5_lareira_estatuas", O(0f, 1.65f, 1.5f), O(0f, 5.6f, HalfD));
                 s.Shot("6_parede_leste", O(-2.5f, 1.65f, 0f), O(HalfW, 3.6f, 0f));
                 s.Shot("7_visao_geral", O(-4.2f, 1.65f, -6.2f), O(1.5f, 4.5f, 3f));
+                s.Shot("9_estatua_venus", O(3.3f, 4.9f, 4.4f), O(3.3f, 4.9f, HalfD));
+                s.Shot("9_estatua_classica", O(-3.3f, 4.9f, 4.4f), O(-3.3f, 4.9f, HalfD));
 
                 var fall = GameObject.Find("SalaoInvertido/Lustre_Puzzle").GetComponent<LustreQueda>();
                 fall.SnapBroken();
