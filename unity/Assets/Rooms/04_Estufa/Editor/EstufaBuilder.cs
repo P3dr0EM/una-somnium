@@ -402,7 +402,10 @@ namespace Somnium.EditorTools.Rooms
             // Pedestal e taça (como a "birdbath" da referência).
             RoomKit.Box(g, "Pedestal_Base", new Vector3(0f, 0.45f, 0f), new Vector3(0.5f, 0.3f, 0.5f), darkStone);
             RoomKit.Prim(PrimitiveType.Cylinder, g, "Pedestal", new Vector3(0f, 0.9f, 0f), new Vector3(0.22f, 0.32f, 0.22f), darkStone, true);
-            RoomKit.Prim(PrimitiveType.Cylinder, g, "Taca_Fundo", new Vector3(0f, BowlY - 0.05f, 0f), new Vector3(0.75f, 0.06f, 0.75f), darkStone, true);
+            // Sem o colisor padrão do cilindro (é uma cápsula: achatada vira uma esfera de ~75 cm que tapava os itens).
+            var bowl = RoomKit.Prim(PrimitiveType.Cylinder, g, "Taca_Fundo", new Vector3(0f, BowlY - 0.05f, 0f), new Vector3(0.75f, 0.06f, 0.75f), darkStone);
+            var bowlCol = bowl.AddComponent<BoxCollider>();
+            bowlCol.size = new Vector3(1.4f, 2f, 1.4f); // em escala local: 0,75 x 0,12 x 0,75 m
             for (int i = 0; i < 16; i++)
             {
                 float a = i * Mathf.PI / 8f;
@@ -428,11 +431,64 @@ namespace Somnium.EditorTools.Rooms
             bm.duration = 5f;
             RoomKit.SetPrompt(bm, "Examinar a planta");
 
-            // A planta: modelo do grupo (Plant42) crescendo no tanque, ao lado do pedestal.
+            // A planta (procedural, inspirada na planta-monstro de RE): caule grosso saindo da água ao lado do pedestal,
+            // curvando-se sobre a taça, com um bulbo de pétalas fechadas no topo, folhas boiando e raízes na borda.
             var plantRoot = RoomKit.Child(g, "Planta", Vector3.zero);
             plantRoot.gameObject.AddComponent<NaoAssar>();
-            var model = RoomKit.Model($"{ModelFolder}/plant42.fbx", plantRoot, "Plant42", new Vector3(-0.75f, 0.33f, 0.6f), 35f, 2.3f, true, plantMat);
-            if (model == null) model = RoomKit.Prim(PrimitiveType.Capsule, plantRoot, "Plant42", new Vector3(-0.75f, 1.2f, 0.6f), new Vector3(0.7f, 1f, 0.7f), plantMat);
+            var petalMat = kit.Mat("Estufa_Petala", new Color(0.42f, 0.12f, 0.13f), 0.45f);
+            var veinMat = kit.Mat("Estufa_Veio", new Color(0.62f, 0.5f, 0.32f), 0.4f);
+            var leafMat = kit.Mat("Estufa_FolhaGrande", new Color(0.13f, 0.22f, 0.1f), 0.35f);
+            var model = RoomKit.Child(plantRoot, "Corpo", new Vector3(-0.8f, 0.3f, 0.7f)); // origem na linha d'água: murchar = desabar para a água
+            var bodyParts = new List<Matrix4x4>();
+            var stemTop = Vector3.zero;
+            {
+                // Caule: sobe, inclina para a taça (o "pescoço" da planta olhando para o jogador).
+                int n = 34;
+                for (int i = 0; i < n; i++)
+                {
+                    float t = i / (n - 1f);
+                    var p = new Vector3(Mathf.Sin(t * 1.6f) * 0.55f, t * 2.15f, -Mathf.Sin(t * 1.4f) * 0.35f);
+                    float s = Mathf.Lerp(0.36f, 0.22f, t) * (1f + 0.06f * Mathf.Sin(t * 20f));
+                    bodyParts.Add(Matrix4x4.TRS(p, Quaternion.identity, Vector3.one * s));
+                    stemTop = p;
+                }
+                // Raízes grossas: da base pela água até a borda do tanque.
+                for (int r = 0; r < 4; r++)
+                {
+                    float a = r * 1.4f + 0.6f;
+                    for (int i = 0; i < 12; i++)
+                    {
+                        float t = i / 11f;
+                        var p = new Vector3(Mathf.Cos(a) * t * 1.0f, 0.02f + Mathf.Sin(t * Mathf.PI) * 0.12f, Mathf.Sin(a) * t * 0.9f);
+                        bodyParts.Add(Matrix4x4.TRS(p, Quaternion.identity, Vector3.one * Mathf.Lerp(0.2f, 0.07f, t)));
+                    }
+                }
+            }
+            RoomKit.Combined(model, "Caule", PrimitiveType.Sphere, bodyParts, vineMat);
+            // Folhas largas boiando em volta da base.
+            for (int i = 0; i < 6; i++)
+            {
+                float a = i * Mathf.PI / 3f + 0.3f;
+                var leafGo = RoomKit.Prim(PrimitiveType.Sphere, model, "Folha", new Vector3(Mathf.Cos(a) * 0.5f, 0.04f, Mathf.Sin(a) * 0.45f), new Vector3(0.75f, 0.05f, 0.32f), leafMat);
+                leafGo.transform.localRotation = Quaternion.Euler(R(-8f, 8f), -a * Mathf.Rad2Deg, R(-6f, 6f));
+            }
+            // Bulbo: cabeça fechada de pétalas carnudas, com veios claros.
+            var head = RoomKit.Child(model, "Bulbo", stemTop + new Vector3(0.05f, 0.25f, 0f));
+            head.localRotation = Quaternion.Euler(-25f, 0f, 30f);
+            RoomKit.Prim(PrimitiveType.Sphere, head, "Miolo", Vector3.zero, new Vector3(0.62f, 0.72f, 0.62f), plantMat);
+            for (int i = 0; i < 6; i++)
+            {
+                float a = i * Mathf.PI / 3f;
+                var petal = RoomKit.Child(head, "Petala", new Vector3(Mathf.Cos(a) * 0.2f, -0.05f, Mathf.Sin(a) * 0.2f));
+                petal.localRotation = Quaternion.Euler(0f, -a * Mathf.Rad2Deg, 0f) * Quaternion.Euler(0f, 0f, 18f);
+                RoomKit.Prim(PrimitiveType.Sphere, petal, "Carne", new Vector3(0.08f, 0.25f, 0f), new Vector3(0.18f, 0.8f, 0.42f), petalMat);
+                RoomKit.Prim(PrimitiveType.Sphere, petal, "Veio", new Vector3(0.16f, 0.25f, 0f), new Vector3(0.03f, 0.65f, 0.06f), veinMat);
+            }
+            // Bolsas brilhando no bulbo e no caule.
+            var headPods = new List<Vector3>();
+            headPods.Add(stemTop + new Vector3(0.05f, 0.62f, 0f));
+            headPods.Add(new Vector3(0.25f, 1.1f, -0.18f));
+            headPods.Add(new Vector3(0.05f, 0.5f, 0.02f));
 
             // Tentáculos procedurais enrolados na taça (esferas ao longo de espirais, afinando na ponta).
             var vineParts = new List<Matrix4x4>();
@@ -461,13 +517,15 @@ namespace Somnium.EditorTools.Rooms
             var podRenderers = new List<Renderer>();
             foreach (var p in podSpots)
                 podRenderers.Add(RoomKit.Prim(PrimitiveType.Sphere, pods, "Bolsa", p, new Vector3(0.09f, 0.12f, 0.09f), pod).GetComponent<Renderer>());
+            foreach (var p in headPods)
+                podRenderers.Add(RoomKit.Prim(PrimitiveType.Sphere, pods, "Bolsa_Corpo", model.localPosition + p, new Vector3(0.13f, 0.16f, 0.13f), pod).GetComponent<Renderer>());
             var glow = RoomKit.PointLight(pods, "Luz_Bioluminescente", new Vector3(0f, 1.4f, 0f), new Color(0.45f, 1f, 0.5f), 1.3f, 4.5f);
             var pulse = pods.gameObject.AddComponent<PulsoBrilho>();
             pulse.renderers = podRenderers.ToArray();
             pulse.glowLight = glow;
 
             var wither = g.gameObject.AddComponent<PlantaMurcha>();
-            wither.parts = new[] { model.transform, vines.transform };
+            wither.parts = new[] { model, vines.transform };
             var tint = new List<Renderer>(model.GetComponentsInChildren<Renderer>()) { vines.GetComponent<Renderer>() };
             wither.tint = tint.ToArray();
             wither.disableOnWither = new[] { pods.gameObject, block };
