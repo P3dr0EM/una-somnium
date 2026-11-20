@@ -480,8 +480,7 @@ namespace Somnium.EditorTools.Rooms
             petal2.SetFloat("_Cull", 0f); // duas faces: as pétalas do modelo são planas, de uma face só
             petal2.doubleSidedGI = true;
             var crown = RoomKit.Model($"{ModelFolder}/plant42_flor.fbx", head, "Coroa_Plant42", Vector3.zero, 0f, 2.3f, false, petal2);
-            if (crown != null) // desce a coroa: o ponto de encaixe das pétalas fica no miolo, não acima dele
-                crown.transform.localPosition += Vector3.down * (RoomKit.WorldBounds(crown).size.y * 0.42f);
+            if (crown != null) AlignCrownToStem(crown, head);
             if (crown == null) // sem o modelo: pétalas simples
                 for (int i = 0; i < 5; i++)
                 {
@@ -545,6 +544,35 @@ namespace Somnium.EditorTools.Rooms
             wither.disableOnWither = new[] { pods.gameObject, block };
             wither.sound = RoomKit.Sound3D(g.gameObject, WitherClip(), 0.9f, 3f, 25f);
             return wither;
+        }
+
+        /// <summary>
+        /// Encaixa a coroa no caule: acha o ponto de onde as pétalas nascem (média dos vértices mais próximos do eixo
+        /// central da coroa, no espaço da cabeça) e move a coroa para esse ponto ficar no miolo (origem da cabeça).
+        /// Centralizar pelo contorno não serve: as pétalas são assimétricas.
+        /// </summary>
+        static void AlignCrownToStem(GameObject crown, Transform head)
+        {
+            var pts = new List<Vector3>();
+            foreach (var mf in crown.GetComponentsInChildren<MeshFilter>())
+            {
+                if (mf.sharedMesh == null) continue;
+                foreach (var v in mf.sharedMesh.vertices)
+                    pts.Add(head.InverseTransformPoint(mf.transform.TransformPoint(v)));
+            }
+            if (pts.Count == 0) return;
+            var mean = Vector3.zero;
+            foreach (var p in pts) mean += p;
+            mean /= pts.Count;
+            // 12% dos vértices mais perto do eixo vertical que passa pela média = base das pétalas.
+            pts.Sort((a, b) => (new Vector2(a.x - mean.x, a.z - mean.z)).sqrMagnitude.CompareTo((new Vector2(b.x - mean.x, b.z - mean.z)).sqrMagnitude));
+            int n = Mathf.Max(3, pts.Count * 12 / 100);
+            var core = Vector3.zero;
+            for (int i = 0; i < n; i++) core += pts[i];
+            core /= n;
+            var target = new Vector3(0f, 0.1f, 0f); // um pouco acima do centro do miolo
+            crown.transform.position += head.TransformVector(target - core);
+            Debug.Log($"[Somnium] Coroa da planta encaixada: deslocamento {(target - core)}");
         }
 
         // ------------------------------------------------------------------ painel de irrigação + canos + sprinklers
@@ -724,6 +752,7 @@ namespace Somnium.EditorTools.Rooms
                 s.Shot("5_trelica", O(-1.5f, 1.65f, -3.5f), O(0.5f, H, 1f));
                 s.Shot("6_fundo", O(2.5f, 1.65f, -4.8f), O(-2f, 1.5f, HalfD));
                 s.Shot("8_flor", O(1.8f, 2.6f, F.z - 3.2f), O(F.x - 0.6f, 2.7f, F.z + 0.5f));
+                s.Shot("8b_flor_baixo", O(0.6f, 1.65f, F.z - 1.9f), O(F.x - 0.5f, 2.9f, F.z + 0.6f));
 
                 var irr = GameObject.Find("Estufa/Irrigacao/Painel").GetComponent<Irrigacao>();
                 irr.Snap();
