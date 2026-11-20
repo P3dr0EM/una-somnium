@@ -15,6 +15,6 @@ MonoBehaviour:
   displayName: Cartucho de Herbicida
   description: "Cartucho cheio de \xE1cido. Mortal para plantas."
   icon: {fileID: 0}
-  inspectModel: {fileID: 0}
+  inspectModel: {fileID: 919132149155446097, guid: 309322656fb66384dbca507847272d30, type: 3}
   inspectSize: 0.22
   combinations: []

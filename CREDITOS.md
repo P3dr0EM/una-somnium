@@ -14,3 +14,7 @@ Alterações: escala, material (mármore branco / preto) e orientação (de cabe
 
 ## Modelos do grupo
 - Plant42 (coroa de pétalas usada na planta da Estufa), escrivaninha, cadeira e galão: modelados pelo grupo.
+- Estátua do Saguão, lareira, mesa, cofre, cúpula (terrário), planta neon, sprinkler, alicate, manivela, cartucho, herbicida, medalhão, pote de ração: modelados pelo grupo.
+
+## Pendente
+- **Lustre** (`lustre.zip`, FBX com texturas, 2018): baixado da internet; falta autor, link e licença.

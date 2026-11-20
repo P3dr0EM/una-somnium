@@ -102,6 +102,7 @@ namespace Somnium.EditorTools.Rooms
             BuildDesks();
             BuildTrapdoor();
             BuildCloset();
+            BuildSafe();
             BuildLights();
 
             var spawn = RoomKit.Child(root, "PlayerSpawn", new Vector3(0f, 0f, -HalfD + 1.2f));
@@ -417,6 +418,26 @@ namespace Somnium.EditorTools.Rooms
             RoomKit.SetPrompt(lockComp, "Examinar o galão");
         }
 
+        // ------------------------------------------------------------------ cofre (decoração; o puzzle do cofre foi cortado)
+
+        static void BuildSafe()
+        {
+            var metal = kit.Mat("Escritorio_Cofre", new Color(0.2f, 0.25f, 0.33f), 0.45f, 0.4f);
+            var holder = RoomKit.Child(root, "Cofre", new Vector3(-HalfW + 0.6f, 0f, HalfD - 0.75f));
+            var safe = RoomKit.Model($"{ModelFolder}/cofre.fbx", holder, "Cofre_Modelo", Vector3.zero, SafeYaw, 1.1f, true, metal);
+            if (safe == null) safe = RoomKit.Box(holder, "Cofre_Modelo", new Vector3(0f, 0.55f, 0f), new Vector3(0.9f, 1.1f, 0.8f), metal, false);
+            var b = RoomKit.WorldBounds(safe);
+            var col = safe.AddComponent<BoxCollider>();
+            col.center = safe.transform.InverseTransformPoint(b.center);
+            col.size = b.size;
+            var msg = safe.AddComponent<MessageInteractable>();
+            msg.message = "Um cofre antigo de aço. O mostrador está emperrado e ninguém lembra a combinação há décadas.";
+            RoomKit.SetPrompt(msg, "Examinar o cofre");
+        }
+
+        /// <summary>Giro do cofre do grupo para a porta ficar virada para o corredor (ajustado pelas prévias).</summary>
+        const float SafeYaw = 0f;
+
         // ------------------------------------------------------------------ luz fluorescente
 
         static void BuildLights()
@@ -473,6 +494,7 @@ namespace Somnium.EditorTools.Rooms
                 root.Find("Almoxarifado/Porta_Dir").localRotation = Quaternion.Euler(0f, -100f, 0f);
                 s.Shot("6_alcapao_aberto", O(0.3f, 1.65f, zc - 1.6f), O(0f, -0.6f, zc));
                 s.Shot("7_armario_aberto", O(3.4f, 1.65f, 8.9f), ClosetPos + Origin + new Vector3(0f, 0.4f, 0f));
+                s.Shot("8_cofre", O(-3.6f, 1.65f, 7.6f), O(-HalfW + 0.6f, 0.6f, HalfD - 0.75f));
             }
             EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
             Debug.Log($"[Somnium] Prévias do Escritório Azul salvas em {System.IO.Path.GetFullPath(dir)}");

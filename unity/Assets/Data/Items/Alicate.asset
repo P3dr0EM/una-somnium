@@ -15,6 +15,6 @@ MonoBehaviour:
   displayName: Alicate
   description: Afiado o bastante para cortar uma corrente.
   icon: {fileID: 0}
-  inspectModel: {fileID: 0}
-  inspectSize: 0.22
+  inspectModel: {fileID: 919132149155446097, guid: e66d5b09080d1f54797e126a6ef49a69, type: 3}
+  inspectSize: 0.24
   combinations: []

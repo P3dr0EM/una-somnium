@@ -40,6 +40,8 @@ namespace Somnium.EditorTools.Rooms
         const int MainLocks = 4; // fluxo enxuto (opção B): 4 chaves
         /// <summary>Assar a luz ao gerar (leva alguns minutos). Desligue para gerar rápido enquanto mexe no layout.</summary>
         static readonly bool BakeLight = true;
+        /// <summary>Giro da estátua do grupo para olhar para a entrada (ajustado pelas prévias).</summary>
+        const float StatueYaw = 0f;
         const string MatFolder = Folder + "/Materials";
         const string PersistenciaPath = "Assets/Scenes/persistencia.unity";
         const string ItemsFolder = "Assets/Data/Items";
@@ -442,20 +444,37 @@ namespace Somnium.EditorTools.Rooms
 
             var g = Child(root, "Estatua", new Vector3(0f, 0f, -1.6f));
             Box(g, "Pedestal", new Vector3(0f, 0.5f, 0f), new Vector3(1.2f, 1f, 1.2f), stone);
-            Box(g, "Figura", new Vector3(0f, 1.9f, 0.15f), new Vector3(0.55f, 1.8f, 0.45f), stone);
-            var head = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            Place(head, g, "Cabeca", new Vector3(0f, 3.0f, 0.15f), Vector3.one * 0.4f, stone);
-            Box(g, "Braco_Esq", new Vector3(-0.38f, 2.2f, -0.05f), new Vector3(0.16f, 0.16f, 0.6f), stone);
-            Box(g, "Braco_Dir", new Vector3(0.38f, 2.2f, -0.05f), new Vector3(0.16f, 0.16f, 0.6f), stone);
+            // Estátua do grupo (estatua.blend: figura sobre plinto) em cima do pedestal do puzzle, um pouco para trás
+            // (a tampa da Chave 4 fica livre na frente). Sem o modelo: blocos.
+            var statue = RoomKit.Model("Assets/Rooms/00_Saguao/Models/estatua.fbx", g, "Estatua_Modelo", new Vector3(0f, 1f, 0.18f), StatueYaw, 2.5f, true, stone);
+            if (statue != null)
+            {
+                var sb = RoomKit.WorldBounds(statue);
+                var col = statue.AddComponent<BoxCollider>();
+                col.center = statue.transform.InverseTransformPoint(sb.center);
+                col.size = sb.size;
+            }
+            else
+            {
+                Box(g, "Figura", new Vector3(0f, 1.9f, 0.15f), new Vector3(0.55f, 1.8f, 0.45f), stone);
+                var head = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                Place(head, g, "Cabeca", new Vector3(0f, 3.0f, 0.15f), Vector3.one * 0.4f, stone);
+            }
 
             // Encaixe redondo com sol gravado na frente do pedestal.
             var socket = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             Place(socket, g, "Encaixe", new Vector3(0f, 0.6f, -0.61f), new Vector3(0.3f, 0.015f, 0.3f), dark);
             socket.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-            var medal = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            Place(medal, g, "MedalhaoEncaixado", new Vector3(0f, 0.6f, -0.625f), new Vector3(0.26f, 0.015f, 0.26f), gold);
-            medal.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-            Object.DestroyImmediate(medal.GetComponent<Collider>());
+            // Medalhão encaixado: o modelo do grupo (se houver), em pé na frente do pedestal.
+            var medal = RoomKit.Model($"{ModelosGrupo.ItemModels}/medalhao.fbx", g, "MedalhaoEncaixado", new Vector3(0f, 0.47f, -0.63f), 0f, 0.26f, false, null);
+            if (medal != null) medal.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f) * medal.transform.localRotation;
+            else
+            {
+                medal = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                Place(medal, g, "MedalhaoEncaixado", new Vector3(0f, 0.6f, -0.625f), new Vector3(0.26f, 0.015f, 0.26f), gold);
+                medal.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                Object.DestroyImmediate(medal.GetComponent<Collider>());
+            }
             medal.SetActive(false);
 
             // Tampa no alto do pedestal: some ao encaixar o medalhão e revela a Chave 4.

@@ -15,6 +15,6 @@ MonoBehaviour:
   displayName: "Medalh\xE3o do Sol"
   description: "As duas metades unidas. Parece encaixar em uma est\xE1tua."
   icon: {fileID: 0}
-  inspectModel: {fileID: 0}
-  inspectSize: 0.22
+  inspectModel: {fileID: 919132149155446097, guid: 2ed26fd9a3ab40440b0176b3a651ac0d, type: 3}
+  inspectSize: 0.16
   combinations: []
