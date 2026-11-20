@@ -289,3 +289,4 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
   - As pétalas do modelo são de uma face só: material de **duas faces** (`_Cull` 0).
 - Os zips baixados ficam fora do git (`models/*.zip`).
 - **Créditos CC BY completos** (P11): gato (boud), Low-Poly Statue (Nikita Borovkov) e Venus (Enlil Scan), em `CREDITOS.md`.
+- **Pedestais das estátuas** refeitos: pedestal clássico de ponta-cabeça preso no alto do nicho (base larga com moldura, mísulas na parede, fuste com frisos e plinto embaixo, onde ficam os pés). A **Vênus** foi girada 180° (estava de frente para a parede).
