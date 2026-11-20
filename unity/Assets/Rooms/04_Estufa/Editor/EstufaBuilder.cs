@@ -472,21 +472,35 @@ namespace Somnium.EditorTools.Rooms
                 var leafGo = RoomKit.Prim(PrimitiveType.Sphere, model, "Folha", new Vector3(Mathf.Cos(a) * 0.5f, 0.04f, Mathf.Sin(a) * 0.45f), new Vector3(0.75f, 0.05f, 0.32f), leafMat);
                 leafGo.transform.localRotation = Quaternion.Euler(R(-8f, 8f), -a * Mathf.Rad2Deg, R(-6f, 6f));
             }
-            // Bulbo: cabeça fechada de pétalas carnudas, com veios claros.
-            var head = RoomKit.Child(model, "Bulbo", stemTop + new Vector3(0.05f, 0.25f, 0f));
-            head.localRotation = Quaternion.Euler(-25f, 0f, 30f);
-            RoomKit.Prim(PrimitiveType.Sphere, head, "Miolo", Vector3.zero, new Vector3(0.62f, 0.72f, 0.62f), plantMat);
-            for (int i = 0; i < 6; i++)
+            // Cabeça: a coroa de pétalas ABERTAS da Plant42 do grupo (só essa parte, exportada de Plant42.blend),
+            // inclinada para o jogador, com um miolo carnudo e bolsas brilhando no centro.
+            var head = RoomKit.Child(model, "Cabeca", stemTop + new Vector3(0.02f, 0.12f, 0f));
+            head.localRotation = Quaternion.Euler(-48f, 0f, 18f); // flor virada para quem entra (sul)
+            var petal2 = kit.Mat("Estufa_PetalaDupla", new Color(0.55f, 0.15f, 0.16f), 0.45f);
+            petal2.SetFloat("_Cull", 0f); // duas faces: as pétalas do modelo são planas, de uma face só
+            petal2.doubleSidedGI = true;
+            var crown = RoomKit.Model($"{ModelFolder}/plant42_flor.fbx", head, "Coroa_Plant42", Vector3.zero, 0f, 2.3f, false, petal2);
+            if (crown != null) // desce a coroa: o ponto de encaixe das pétalas fica no miolo, não acima dele
+                crown.transform.localPosition += Vector3.down * (RoomKit.WorldBounds(crown).size.y * 0.42f);
+            if (crown == null) // sem o modelo: pétalas simples
+                for (int i = 0; i < 5; i++)
+                {
+                    float a = i * Mathf.PI * 2f / 5f;
+                    var petal = RoomKit.Child(head, "Petala", new Vector3(Mathf.Cos(a) * 0.3f, 0.05f, Mathf.Sin(a) * 0.3f));
+                    petal.localRotation = Quaternion.Euler(0f, -a * Mathf.Rad2Deg, 0f) * Quaternion.Euler(0f, 0f, -55f);
+                    RoomKit.Prim(PrimitiveType.Sphere, petal, "Carne", new Vector3(0f, 0.35f, 0f), new Vector3(0.36f, 0.8f, 0.08f), petalMat);
+                }
+            RoomKit.Prim(PrimitiveType.Sphere, head, "Miolo", new Vector3(0f, 0.12f, 0f), new Vector3(0.36f, 0.26f, 0.36f), plantMat);
+            for (int i = 0; i < 8; i++) // "dentes"/estames em volta do miolo
             {
-                float a = i * Mathf.PI / 3f;
-                var petal = RoomKit.Child(head, "Petala", new Vector3(Mathf.Cos(a) * 0.2f, -0.05f, Mathf.Sin(a) * 0.2f));
-                petal.localRotation = Quaternion.Euler(0f, -a * Mathf.Rad2Deg, 0f) * Quaternion.Euler(0f, 0f, 18f);
-                RoomKit.Prim(PrimitiveType.Sphere, petal, "Carne", new Vector3(0.08f, 0.25f, 0f), new Vector3(0.18f, 0.8f, 0.42f), petalMat);
-                RoomKit.Prim(PrimitiveType.Sphere, petal, "Veio", new Vector3(0.16f, 0.25f, 0f), new Vector3(0.03f, 0.65f, 0.06f), veinMat);
+                float a = i * Mathf.PI / 4f;
+                RoomKit.Prim(PrimitiveType.Capsule, head, "Estame", new Vector3(Mathf.Cos(a) * 0.17f, 0.25f, Mathf.Sin(a) * 0.17f), new Vector3(0.035f, 0.09f, 0.035f), veinMat)
+                    .transform.localRotation = Quaternion.Euler(Mathf.Sin(a) * 25f, 0f, -Mathf.Cos(a) * 25f);
             }
-            // Bolsas brilhando no bulbo e no caule.
+            // Bolsas brilhando no centro da flor e no caule (posições na mesma referência do "Corpo").
             var headPods = new List<Vector3>();
-            headPods.Add(stemTop + new Vector3(0.05f, 0.62f, 0f));
+            headPods.Add(head.localPosition + head.localRotation * new Vector3(0f, 0.28f, 0f));
+            headPods.Add(head.localPosition + head.localRotation * new Vector3(0.1f, 0.2f, 0.08f));
             headPods.Add(new Vector3(0.25f, 1.1f, -0.18f));
             headPods.Add(new Vector3(0.05f, 0.5f, 0.02f));
 
@@ -709,6 +723,7 @@ namespace Somnium.EditorTools.Rooms
                 s.Shot("4_bancada", O(BenchPos.x + 2.2f, 1.65f, BenchPos.z - 1f), O(BenchPos.x, 0.9f, BenchPos.z));
                 s.Shot("5_trelica", O(-1.5f, 1.65f, -3.5f), O(0.5f, H, 1f));
                 s.Shot("6_fundo", O(2.5f, 1.65f, -4.8f), O(-2f, 1.5f, HalfD));
+                s.Shot("8_flor", O(1.8f, 2.6f, F.z - 3.2f), O(F.x - 0.6f, 2.7f, F.z + 0.5f));
 
                 var irr = GameObject.Find("Estufa/Irrigacao/Painel").GetComponent<Irrigacao>();
                 irr.Snap();

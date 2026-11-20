@@ -101,5 +101,5 @@ Revisto em 2026-11-14 porque a sessão de sexta (13) não aconteceu. O domingo, 
 | P8 | Ajustes de sensação do teste no PC (velocidade, alcance, textos). Nada reportado ainda. | P3DR0EM | Ajuste fino. |
 | P9 | **Como o jogador chega ao Saguão?** Desde 2026-11-15 o jogo **começa no Saguão** (a `persistencia` carrega o `saguao`). Falta decidir com o Caio se a `area_externa` entra antes (porta ou portal levando ao Saguão). | P3DR0EM + Caio | Fluxo final do jogo. |
 | P10 | **Arte final do Saguão**: trocar os blocos por modelos (estátua: há um `estatua.blend` em `models/`), texturas de papel de parede e madeira, iluminação baked para o celular. | P3DR0EM + Caio | Visual final. |
-| P11 | **Crédito do gato (CC BY)**: preencher autor e link em `CREDITOS.md`. | P3DR0EM | Cumprir a licença. |
+| P11 | **Créditos CC BY** (gato e as duas estátuas): preencher autor e link em `CREDITOS.md`. | P3DR0EM | Cumprir a licença. |
 | P12 | **Porta da Colinas XP como portal** (ver o Saguão através dela). Depende da P2. | Caio | Efeito "Suzume" completo. |
