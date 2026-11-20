@@ -288,3 +288,4 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 - **Planta mesclada**: a **coroa de pétalas abertas** da Plant42 (só essa parte, separada por material do `Plant42.blend` e exportada como `plant42_flor.fbx`) no topo do caule procedural, com miolo, estames e bolsas brilhando.
   - As pétalas do modelo são de uma face só: material de **duas faces** (`_Cull` 0).
 - Os zips baixados ficam fora do git (`models/*.zip`).
+- **Créditos CC BY completos** (P11): gato (boud), Low-Poly Statue (Nikita Borovkov) e Venus (Enlil Scan), em `CREDITOS.md`.
