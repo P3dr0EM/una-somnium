@@ -27,6 +27,7 @@ namespace Somnium.EditorTools.Rooms
         public const string SpawnFromColinas = "de_colinas";
         public const string SpawnFromEscritorio = "de_escritorio";
         public const string SpawnFromSalao = "de_salao";
+        public const string SpawnFromEstufa = "de_estufa";
 
         /// <summary>Salas já prontas: id da porta → (cena da sala, id do ponto de chegada aqui ao voltar). As outras portas ficam trancadas.</summary>
         static readonly Dictionary<string, (string scene, string spawnBack)> RoomLinks = new Dictionary<string, (string, string)>
@@ -34,10 +35,11 @@ namespace Somnium.EditorTools.Rooms
             { "ColinasXP", (ColinasBuilder.ScenePath, SpawnFromColinas) },
             { "EscritorioAzul", (EscritorioBuilder.ScenePath, SpawnFromEscritorio) },
             { "SalaoInvertido", (SalaoBuilder.ScenePath, SpawnFromSalao) },
+            { "Estufa", (EstufaBuilder.ScenePath, SpawnFromEstufa) },
         };
         const int MainLocks = 4; // fluxo enxuto (opção B): 4 chaves
         /// <summary>Assar a luz ao gerar (leva alguns minutos). Desligue para gerar rápido enquanto mexe no layout.</summary>
-        const bool BakeLight = true;
+        static readonly bool BakeLight = true;
         const string MatFolder = Folder + "/Materials";
         const string PersistenciaPath = "Assets/Scenes/persistencia.unity";
         const string ItemsFolder = "Assets/Data/Items";
@@ -619,7 +621,7 @@ namespace Somnium.EditorTools.Rooms
         /// Liga a mesa com os itens das salas que ainda não existem (Salão Invertido e Estufa), para dar para jogar
         /// o percurso inteiro na demonstração. Desligar (false) quando as salas reais estiverem prontas.
         /// </summary>
-        const bool DemoTable = true;
+        static readonly bool DemoTable = false; // 2026-11-19: todas as salas prontas, os itens vêm delas
 
         static void BuildDemoTable()
         {

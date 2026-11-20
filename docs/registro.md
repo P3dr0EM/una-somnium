@@ -253,3 +253,20 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 - Arandelas em dois níveis nas pilastras.
 - Dourado e ferro **foscos** (metal puro fica preto com luz assada).
 - Benchmark de jogos de referência: `docs/notas/benchmark-salao-invertido.md`.
+
+## 2026-11-19
+
+### Estufa (última sala) e jogo completo
+- Referências do P3DR0EM: o pátio-estufa e a planta do Resident Evil original (`docs/references/plant1-3.png`).
+- Gerador `Rooms/04_Estufa/Editor/EstufaBuilder.cs`, com os menus **Somnium → Salas → Abrir / Gerar / Renderizar prévias da Estufa**. Cena em x = 5000.
+  - Treliça escura no teto com o céu noturno e o **luar** (sombras da treliça assadas no chão); paredes de reboco úmido com musgo, escorridos e muita **hera** (malha combinada).
+  - Canteiros de tijolo com mato seco, banco de ripas, carretel de mangueira e porta do fundo trancada por raízes.
+- **Planta**: o modelo **Plant42** do grupo (exportado para FBX) no tanque da fonte, com **7 tentáculos procedurais** enrolados na taça.
+  - Bioluminescência discreta: **bolsas verdes que pulsam** e uma luz verde fraca (`PulsoBrilho`).
+  - A Chave 3 e a Metade B ficam na taça, protegidas por um bloqueio de tentáculos.
+- **Puzzle**:
+  - **Cartucho Vazio** na bancada (com o bilhete do jardineiro), vira Herbicida no galão do Escritório.
+  - O Herbicida vai no **painel de irrigação**: o manômetro gira, 3 **sprinklers** soltam névoa (partículas) com chiado, e a planta **murcha** (escurece, tomba, apaga; `PlantaMurcha`, `Irrigacao`).
+- `RoomKit`: `Combined(...)` (muitas peças numa malha só) e `ParticleMat(...)` (névoa transparente).
+- **Mesa de demonstração desligada** (`DemoTable = false`): todas as salas existem, e o jogo vai do Saguão até "Você acordou." sem atalhos.
+- Debug: **Receber Herbicida**. `TodasSalas` agora gera também a Estufa.

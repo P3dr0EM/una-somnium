@@ -428,6 +428,71 @@ namespace Somnium.EditorTools.Rooms
             return ok;
         }
 
+        // ---------------- malhas combinadas
+
+        /// <summary>
+        /// Junta muitas cópias de um primitivo (cubo, esfera, cápsula...) numa malha só: um objeto e uma chamada de desenho.
+        /// Ideal para hera, grama, tentáculos, elos de corrente. As matrizes são locais ao <paramref name="parent"/>.
+        /// </summary>
+        public static GameObject Combined(Transform parent, string name, PrimitiveType type, List<Matrix4x4> parts, Material mat)
+        {
+            var tmp = GameObject.CreatePrimitive(type);
+            var primMesh = tmp.GetComponent<MeshFilter>().sharedMesh;
+            Object.DestroyImmediate(tmp);
+            var ci = new CombineInstance[parts.Count];
+            for (int i = 0; i < parts.Count; i++) ci[i] = new CombineInstance { mesh = primMesh, transform = parts[i] };
+            var mesh = new Mesh { name = name, indexFormat = IndexFormat.UInt32 };
+            mesh.CombineMeshes(ci, true, true);
+            mesh.RecalculateBounds();
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            go.AddComponent<MeshRenderer>().sharedMaterial = mat;
+            return go;
+        }
+
+        /// <summary>Material de partícula transparente (URP), com uma textura de bolinha suave gerada.</summary>
+        public Material ParticleMat(string name, Color color)
+        {
+            string texPath = $"{matFolder}/{name}_Particula.png";
+            const int s = 64;
+            var tex = new Texture2D(s, s, TextureFormat.RGBA32, false);
+            for (int y = 0; y < s; y++)
+                for (int x = 0; x < s; x++)
+                {
+                    float dx = (x + 0.5f) / s * 2f - 1f, dy = (y + 0.5f) / s * 2f - 1f;
+                    float a = Mathf.Clamp01(1f - Mathf.Sqrt(dx * dx + dy * dy));
+                    tex.SetPixel(x, y, new Color(1f, 1f, 1f, a * a));
+                }
+            tex.Apply();
+            File.WriteAllBytes(texPath, tex.EncodeToPNG());
+            Object.DestroyImmediate(tex);
+            AssetDatabase.ImportAsset(texPath);
+            var imp = (TextureImporter)AssetImporter.GetAtPath(texPath);
+            imp.alphaIsTransparency = true;
+            imp.wrapMode = TextureWrapMode.Clamp;
+            imp.SaveAndReimport();
+
+            string path = $"{matFolder}/{name}.mat";
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat == null)
+            {
+                mat = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
+                AssetDatabase.CreateAsset(mat, path);
+            }
+            mat.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(texPath));
+            mat.SetColor("_BaseColor", color);
+            mat.SetFloat("_Surface", 1f);
+            mat.SetFloat("_Blend", 0f);
+            mat.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
+            mat.SetFloat("_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
+            mat.SetFloat("_ZWrite", 0f);
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            mat.renderQueue = (int)RenderQueue.Transparent;
+            EditorUtility.SetDirty(mat);
+            return mat;
+        }
+
         // ---------------- som sintetizado
 
         /// <summary>Gera um .wav mono 16 bits a partir de uma função f(t em segundos) → amostra (-1..1), normaliza e importa.</summary>

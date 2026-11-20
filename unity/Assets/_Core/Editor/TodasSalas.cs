@@ -24,6 +24,7 @@ namespace Somnium.EditorTools.Rooms
             ColinasBuilder.Build();
             EscritorioBuilder.Build();
             SalaoBuilder.Build();
+            EstufaBuilder.Build();
         }
 
         public static void BuildAllAndPreview()
@@ -33,6 +34,7 @@ namespace Somnium.EditorTools.Rooms
             ColinasBuilder.RenderPreviews();
             EscritorioBuilder.RenderPreviews();
             SalaoBuilder.RenderPreviews();
+            EstufaBuilder.RenderPreviews();
         }
     }
 }
