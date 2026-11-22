@@ -35,7 +35,7 @@ namespace Somnium.EditorTools.Rooms
         const float HalfW = 5f, HalfD = 7f, H = 9f, T = 0.25f;
         const float DoorHalfW = 0.6f, DoorH = 2.3f;
         static readonly Vector3 LustrePos = new Vector3(0f, 0f, -1.5f);  // xz do lustre (embaixo da mesa lá em cima)
-        const float LustreBottom = 6f;                                    // ponto mais baixo do lustre (onde a corrente prende)
+        const float LustreBottom = 4.6f;                                  // ponto mais baixo do lustre (onde a corrente prende)
         static readonly Vector3 WinchPos = new Vector3(2.1f, 0f, -1.5f);  // guincho no chão, longe do ponto de queda
         static readonly float[] BaysZ = { -3.5f, 0f, 3.5f };              // vãos entre pilastras (paredes leste/oeste)
         static readonly float[] PilastersZ = { -5.25f, -1.75f, 1.75f, 5.25f };
@@ -728,7 +728,7 @@ namespace Somnium.EditorTools.Rooms
             intact.gameObject.AddComponent<NaoAssar>();
             // Lustre baixado (lustre.zip, ferro com velas e corrente): de ponta-cabeça, a corrente e o suporte dele
             // ficam EMBAIXO, emendando na corrente que sobe do chão. O pivô do "intact" continua sendo o ponto mais baixo.
-            const float lustreH = 2.3f;
+            const float lustreH = 2.0f; // topo a 6,6 m: ~1,6 m de folga até o tampo da mesa (8,24 m)
             var flip = RoomKit.Child(intact, "Invertido", new Vector3(0f, lustreH, 0f));
             var lustreMat = kit.Mat("Salao_LustreFerro", Color.white, 0.4f, 0.3f);
             var tex = AssetDatabase.LoadAssetAtPath<Texture2D>($"{Folder}/Models/Lustre/lustreColor.png");

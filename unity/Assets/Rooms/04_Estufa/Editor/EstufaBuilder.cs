@@ -613,6 +613,7 @@ namespace Somnium.EditorTools.Rooms
             var tint = new List<Renderer>(model.GetComponentsInChildren<Renderer>()) { vines.GetComponent<Renderer>() };
             wither.tint = tint.ToArray();
             wither.disableOnWither = new[] { pods.gameObject, block };
+            wither.shrinkAway = new[] { head };
             wither.sound = RoomKit.Sound3D(g.gameObject, WitherClip(), 0.9f, 3f, 25f);
             return wither;
         }

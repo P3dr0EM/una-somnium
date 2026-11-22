@@ -41,7 +41,7 @@ namespace Somnium.EditorTools.Rooms
         /// <summary>Assar a luz ao gerar (leva alguns minutos). Desligue para gerar rápido enquanto mexe no layout.</summary>
         static readonly bool BakeLight = true;
         /// <summary>Giro da estátua do grupo para olhar para a entrada (ajustado pelas prévias).</summary>
-        const float StatueYaw = 0f;
+        const float StatueYaw = 90f;
         const string MatFolder = Folder + "/Materials";
         const string PersistenciaPath = "Assets/Scenes/persistencia.unity";
         const string ItemsFolder = "Assets/Data/Items";
@@ -453,6 +453,8 @@ namespace Somnium.EditorTools.Rooms
                 var col = statue.AddComponent<BoxCollider>();
                 col.center = statue.transform.InverseTransformPoint(sb.center);
                 col.size = sb.size;
+                // Iluminada pelas Light Probes, não pelo lightmap: os UVs gerados para o modelo davam manchas escuras.
+                statue.AddComponent<NaoAssar>();
             }
             else
             {
@@ -466,8 +468,17 @@ namespace Somnium.EditorTools.Rooms
             Place(socket, g, "Encaixe", new Vector3(0f, 0.6f, -0.61f), new Vector3(0.3f, 0.015f, 0.3f), dark);
             socket.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
             // Medalhão encaixado: o modelo do grupo (se houver), em pé na frente do pedestal.
-            var medal = RoomKit.Model($"{ModelosGrupo.ItemModels}/medalhao.fbx", g, "MedalhaoEncaixado", new Vector3(0f, 0.47f, -0.63f), 0f, 0.26f, false, null);
-            if (medal != null) medal.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f) * medal.transform.localRotation;
+            // O modelo é assentado deitado e centrado num suporte vazio, e só o suporte gira: o disco fica centrado no encaixe.
+            var medalHolder = RoomKit.Child(g, "MedalhaoEncaixado", new Vector3(0f, 0.6f, -0.62f));
+            var medal = medalHolder.gameObject;
+            var medalModel = RoomKit.Model($"{ModelosGrupo.ItemModels}/medalhao.fbx", medalHolder, "Modelo", Vector3.zero, 0f, 0.26f, false, null);
+            if (medalModel != null)
+            {
+                var mb = RoomKit.WorldBounds(medalModel); // centraliza também na espessura
+                medalModel.transform.position -= new Vector3(0f, mb.size.y / 2f, 0f);
+                medalHolder.localRotation = Quaternion.Euler(-90f, 0f, 0f); // face (+Y) virada para a frente do pedestal (-Z)
+                medal.AddComponent<NaoAssar>();
+            }
             else
             {
                 medal = GameObject.CreatePrimitive(PrimitiveType.Cylinder);

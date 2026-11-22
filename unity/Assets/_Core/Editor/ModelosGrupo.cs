@@ -28,6 +28,38 @@ namespace Somnium.EditorTools
             ("MedalhaoMetadeB", "medalhao_metade.fbx", 0.15f),
         };
 
+        /// <summary>Modelos que vieram sem material do Blender (ficam brancos): cor (r, g, b, metálico).</summary>
+        static readonly System.Collections.Generic.Dictionary<string, Vector4> NoMaterial = new System.Collections.Generic.Dictionary<string, Vector4>
+        {
+            { "manivela.fbx", new Vector4(0.3f, 0.29f, 0.28f, 0.6f) }, // ferro escuro
+        };
+
+        /// <summary>Prefab do modelo com um material próprio (para a inspeção no inventário).</summary>
+        static GameObject PrefabWithMaterial(GameObject model, string file, Vector4 c)
+        {
+            string dir = ItemModels + "/Prefabs";
+            Rooms.RoomKit.EnsureFolder(dir);
+            string name = System.IO.Path.GetFileNameWithoutExtension(file);
+            string matPath = $"{dir}/{name}_Mat.mat";
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+            if (mat == null)
+            {
+                mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                AssetDatabase.CreateAsset(mat, matPath);
+            }
+            mat.SetColor("_BaseColor", new Color(c.x, c.y, c.z));
+            mat.SetFloat("_Metallic", c.w);
+            mat.SetFloat("_Smoothness", 0.5f);
+            EditorUtility.SetDirty(mat);
+
+            var inst = (GameObject)PrefabUtility.InstantiatePrefab(model);
+            foreach (var r in inst.GetComponentsInChildren<Renderer>())
+                r.sharedMaterials = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Repeat(mat, r.sharedMaterials.Length));
+            var prefab = PrefabUtility.SaveAsPrefabAsset(inst, $"{dir}/{name}.prefab");
+            Object.DestroyImmediate(inst);
+            return prefab;
+        }
+
         [MenuItem("Somnium/Modelos/Aplicar modelos do grupo")]
         public static void Apply()
         {
@@ -43,6 +75,7 @@ namespace Somnium.EditorTools
                     Debug.LogWarning($"[Somnium] Modelo de item não aplicado: {itemId} / {model}");
                     continue;
                 }
+                if (NoMaterial.TryGetValue(model, out var col)) go = PrefabWithMaterial(go, model, col);
                 item.inspectModel = go;
                 item.inspectSize = size;
                 EditorUtility.SetDirty(item);

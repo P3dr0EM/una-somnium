@@ -19,16 +19,21 @@ namespace Somnium.Rooms
         public Color witheredColor = new Color(0.22f, 0.16f, 0.1f);
         [Tooltip("Desligados ao murchar (bolsas brilhantes, luz verde, bloqueio da taça).")]
         public GameObject[] disableOnWither = new GameObject[0];
+        [Tooltip("Encolhem até sumir ao murchar (ex.: as pétalas da flor, que desabariam em cima da taça).")]
+        public Transform[] shrinkAway = new Transform[0];
         public float seconds = 3f;
         public AudioSource sound;
 
         bool done;
         Vector3[] baseScales;
+        Vector3[] shrinkScales;
 
         void Awake()
         {
             baseScales = new Vector3[parts.Length];
             for (int i = 0; i < parts.Length; i++) if (parts[i] != null) baseScales[i] = parts[i].localScale;
+            shrinkScales = new Vector3[shrinkAway.Length];
+            for (int i = 0; i < shrinkAway.Length; i++) if (shrinkAway[i] != null) shrinkScales[i] = shrinkAway[i].localScale;
         }
 
         public void Wither()
@@ -67,6 +72,10 @@ namespace Somnium.Rooms
                 var target = Vector3.Scale(baseScales[i], witheredScale);
                 parts[i].localScale = Vector3.Lerp(baseScales[i], target, k);
             }
+            // Pétalas: somem na primeira metade da animação (antes de o corpo desabar sobre a taça).
+            float ks = Mathf.Clamp01(k * 2f);
+            for (int i = 0; i < shrinkAway.Length; i++)
+                if (shrinkAway[i] != null) shrinkAway[i].localScale = Vector3.Lerp(shrinkScales[i], Vector3.zero, ks);
             var block = new MaterialPropertyBlock();
             foreach (var r in tint)
             {

@@ -310,3 +310,12 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
   - **Estufa**: o **cartucho** na bancada, os **sprinklers** do grupo, vasos com a **planta neon** (o neon feito no Unity, pulsando) e um **terrário**: a cúpula de vidro com uma planta neon dentro.
 - **Modelos pretos em salas com luz assada**: os FBX não tinham UV de lightmap. Agora `ModelosGrupo` liga "Generate Lightmap UVs" em todos os modelos das salas.
 - Fora do jogo: as boias (eram da Sala das Piscinas, cortada) e a `alicate` e a `manivela quadrada` (versões alternativas).
+
+## 2026-11-21
+
+### Rodada de ajustes dos modelos (teste do P3DR0EM)
+- **Estátua do Saguão**: estava de lado (girada 90° para olhar a entrada). A iluminação estranha vinha do lightmap sobre os UVs gerados do modelo (manchas escuras); agora ela é iluminada pelas Light Probes (`NaoAssar`).
+- **Lustre do Salão** encostava na mesa invertida (topo a 8,3 m e tampo a 8,24 m). Agora o lustre fica a 4,6–6,6 m, com ~1,6 m de folga; a queda continua de ~4,6 m.
+- **Manivela branca na inspeção**: o modelo veio do Blender sem material. `ModelosGrupo` cria um prefab com material de ferro escuro para os modelos sem material (`Shared/Models/Itens/Prefabs`).
+- **Medalhão desalinhado no encaixe**: o giro era aplicado em volta de um pivô fora do centro do disco. Agora o modelo é centrado num suporte vazio e só o suporte gira; fica centrado no encaixe.
+- **Pétala tapando a taça** depois de murchar: as pétalas **encolhem até sumir** na primeira metade da animação (`PlantaMurcha.shrinkAway`), antes de o corpo desabar.
