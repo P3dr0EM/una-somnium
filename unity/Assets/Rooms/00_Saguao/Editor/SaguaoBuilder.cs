@@ -40,6 +40,8 @@ namespace Somnium.EditorTools.Rooms
         const int MainLocks = 4; // fluxo enxuto (opção B): 4 chaves
         /// <summary>Assar a luz ao gerar (leva alguns minutos). Desligue para gerar rápido enquanto mexe no layout.</summary>
         static readonly bool BakeLight = true;
+        /// <summary>Giro da estátua do grupo para olhar para a entrada (ajustado pelas prévias).</summary>
+        const float StatueYaw = 180f; // de frente para o spawn (sul)
         const string MatFolder = Folder + "/Materials";
         const string PersistenciaPath = "Assets/Scenes/persistencia.unity";
         const string ItemsFolder = "Assets/Data/Items";
@@ -344,8 +346,42 @@ namespace Somnium.EditorTools.Rooms
                                    new Vector3(xc + side, BalconyTop / 2f + 0.55f, (1.1f + BalconyZ) / 2f), new Vector3(0.08f, 1.1f, len), wood);
                     rail.transform.localRotation = Quaternion.Euler(-ang, 0f, 0f);
                 }
+
+                // Escada do grupo (escada.fbx): vira o visual do lance. Degraus e corrimãos de bloco ficam só como colisão invisível
+                // (a rampa continua dando a subida suave).
+                var model = RoomKit.Model("Assets/Rooms/00_Saguao/Models/escada.fbx", stair, "Escada_Modelo", new Vector3(xc, 0f, (1.1f + BalconyZ) / 2f), StairYaw, StairHeight, true, null);
+                if (model != null)
+                {
+                    foreach (var r in model.GetComponentsInChildren<Renderer>())
+                    {
+                        var ms = r.sharedMaterials;
+                        for (int k = 0; k < ms.Length; k++)
+                            ms[k] = ms[k] != null && ms[k].name.Contains("Tapete") ? carpet : wood;
+                        r.sharedMaterials = ms;
+                    }
+                    foreach (var r in stair.GetComponentsInChildren<MeshRenderer>())
+                        if (!r.transform.IsChildOf(model.transform)) r.enabled = false;
+                }
+            }
+
+            // Estátuas do grupo no pedestal (pedestal.fbx): uma no pé de cada escada, do lado de fora, viradas para o hall.
+            var marble = Mat("Saguao_MarmoreEstatua", new Color(0.78f, 0.76f, 0.7f), 0.3f);
+            foreach (var (name, x) in new[] { ("Esq", -3.9f), ("Dir", 3.9f) })
+            {
+                var st = RoomKit.Model("Assets/Rooms/00_Saguao/Models/pedestal_estatua.fbx", g, $"Estatua_Pedestal_{name}", new Vector3(x, 0f, 0.9f), PedestalStatueYaw, 2.4f, true, marble);
+                if (st == null) continue;
+                var b = RoomKit.WorldBounds(st);
+                var col = st.AddComponent<BoxCollider>();
+                col.center = st.transform.InverseTransformPoint(b.center);
+                col.size = b.size;
+                st.AddComponent<NaoAssar>(); // luz pelas probes (UV gerado do modelo dá manchas no lightmap)
             }
         }
+
+        /// <summary>Altura total do modelo da escada (com as laterais) e giro para subir em direção ao mezanino (+Z).</summary>
+        const float StairHeight = 4.58f, StairYaw = 0f;
+        /// <summary>Giro das estátuas no pedestal para olharem o hall (ajustado pelas prévias).</summary>
+        const float PedestalStatueYaw = 90f; // de frente para o spawn (sul)
 
         // ------------------------------------------------------------------ porta principal (5 fechaduras → final)
 
@@ -442,20 +478,48 @@ namespace Somnium.EditorTools.Rooms
 
             var g = Child(root, "Estatua", new Vector3(0f, 0f, -1.6f));
             Box(g, "Pedestal", new Vector3(0f, 0.5f, 0f), new Vector3(1.2f, 1f, 1.2f), stone);
-            Box(g, "Figura", new Vector3(0f, 1.9f, 0.15f), new Vector3(0.55f, 1.8f, 0.45f), stone);
-            var head = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            Place(head, g, "Cabeca", new Vector3(0f, 3.0f, 0.15f), Vector3.one * 0.4f, stone);
-            Box(g, "Braco_Esq", new Vector3(-0.38f, 2.2f, -0.05f), new Vector3(0.16f, 0.16f, 0.6f), stone);
-            Box(g, "Braco_Dir", new Vector3(0.38f, 2.2f, -0.05f), new Vector3(0.16f, 0.16f, 0.6f), stone);
+            // Estátua do grupo (estatua.blend: figura sobre plinto) em cima do pedestal do puzzle, um pouco para trás
+            // (a tampa da Chave 4 fica livre na frente). Sem o modelo: blocos.
+            var statue = RoomKit.Model("Assets/Rooms/00_Saguao/Models/estatua.fbx", g, "Estatua_Modelo", new Vector3(0f, 1f, 0.18f), StatueYaw, 2.5f, true, stone);
+            if (statue != null)
+            {
+                var sb = RoomKit.WorldBounds(statue);
+                var col = statue.AddComponent<BoxCollider>();
+                col.center = statue.transform.InverseTransformPoint(sb.center);
+                col.size = sb.size;
+                // Iluminada pelas Light Probes, não pelo lightmap: os UVs gerados para o modelo davam manchas escuras.
+                statue.AddComponent<NaoAssar>();
+            }
+            else
+            {
+                Box(g, "Figura", new Vector3(0f, 1.9f, 0.15f), new Vector3(0.55f, 1.8f, 0.45f), stone);
+                var head = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                Place(head, g, "Cabeca", new Vector3(0f, 3.0f, 0.15f), Vector3.one * 0.4f, stone);
+            }
 
             // Encaixe redondo com sol gravado na frente do pedestal.
             var socket = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             Place(socket, g, "Encaixe", new Vector3(0f, 0.6f, -0.61f), new Vector3(0.3f, 0.015f, 0.3f), dark);
             socket.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-            var medal = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            Place(medal, g, "MedalhaoEncaixado", new Vector3(0f, 0.6f, -0.625f), new Vector3(0.26f, 0.015f, 0.26f), gold);
-            medal.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-            Object.DestroyImmediate(medal.GetComponent<Collider>());
+            // Medalhão encaixado: o modelo do grupo (se houver), em pé na frente do pedestal.
+            // O modelo é assentado deitado e centrado num suporte vazio, e só o suporte gira: o disco fica centrado no encaixe.
+            var medalHolder = RoomKit.Child(g, "MedalhaoEncaixado", new Vector3(0f, 0.6f, -0.62f));
+            var medal = medalHolder.gameObject;
+            var medalModel = RoomKit.Model($"{ModelosGrupo.ItemModels}/medalhao.fbx", medalHolder, "Modelo", Vector3.zero, 0f, 0.26f, false, null);
+            if (medalModel != null)
+            {
+                var mb = RoomKit.WorldBounds(medalModel); // centraliza também na espessura
+                medalModel.transform.position -= new Vector3(0f, mb.size.y / 2f, 0f);
+                medalHolder.localRotation = Quaternion.Euler(-90f, 0f, 0f); // face (+Y) virada para a frente do pedestal (-Z)
+                medal.AddComponent<NaoAssar>();
+            }
+            else
+            {
+                medal = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                Place(medal, g, "MedalhaoEncaixado", new Vector3(0f, 0.6f, -0.625f), new Vector3(0.26f, 0.015f, 0.26f), gold);
+                medal.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                Object.DestroyImmediate(medal.GetComponent<Collider>());
+            }
             medal.SetActive(false);
 
             // Tampa no alto do pedestal: some ao encaixar o medalhão e revela a Chave 4.

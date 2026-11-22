@@ -35,7 +35,7 @@ namespace Somnium.EditorTools.Rooms
         const float HalfW = 5f, HalfD = 7f, H = 9f, T = 0.25f;
         const float DoorHalfW = 0.6f, DoorH = 2.3f;
         static readonly Vector3 LustrePos = new Vector3(0f, 0f, -1.5f);  // xz do lustre (embaixo da mesa lá em cima)
-        const float LustreBottom = 6f;                                    // ponto mais baixo do lustre (onde a corrente prende)
+        const float LustreBottom = 4.6f;                                  // ponto mais baixo do lustre (onde a corrente prende)
         static readonly Vector3 WinchPos = new Vector3(2.1f, 0f, -1.5f);  // guincho no chão, longe do ponto de queda
         static readonly float[] BaysZ = { -3.5f, 0f, 3.5f };              // vãos entre pilastras (paredes leste/oeste)
         static readonly float[] PilastersZ = { -5.25f, -1.75f, 1.75f, 5.25f };
@@ -269,14 +269,19 @@ namespace Somnium.EditorTools.Rooms
             var fireMat = kit.Emissive("Salao_Fogo", new Color(1f, 0.45f, 0.12f), 4f);
             var g = RoomKit.Child(root, "Lareira_Invertida", new Vector3(0f, 0f, HalfD));
 
-            // Corpo da lareira de H-1.5 até o assoalho; a "boca" (fornalha) colada no assoalho lá em cima.
-            RoomKit.Box(g, "Corpo_Esq", new Vector3(-0.85f, H - 0.75f, -0.25f), new Vector3(0.4f, 1.5f, 0.5f), stone, false);
-            RoomKit.Box(g, "Corpo_Dir", new Vector3(0.85f, H - 0.75f, -0.25f), new Vector3(0.4f, 1.5f, 0.5f), stone, false);
-            RoomKit.Box(g, "Fornalha", new Vector3(0f, H - 0.55f, -0.12f), new Vector3(1.3f, 1.1f, 0.25f), soot, false);
-            RoomKit.Box(g, "Verga", new Vector3(0f, H - 1.25f, -0.25f), new Vector3(2.1f, 0.3f, 0.5f), stone, false);
-            // Prateleira (consolo) EMBAIXO da lareira, como se estivesse em cima numa sala normal.
-            RoomKit.Box(g, "Consolo", new Vector3(0f, H - 1.45f, -0.32f), new Vector3(2.4f, 0.08f, 0.64f), stone, false);
-            RoomKit.Prim(PrimitiveType.Cylinder, g, "Vaso_Consolo", new Vector3(-0.8f, H - 1.66f, -0.35f), new Vector3(0.14f, 0.14f, 0.14f), kit.Mat("Salao_Porcelana", new Color(0.92f, 0.92f, 0.95f), 0.6f));
+            // Lareira do grupo (laleira.blend): presa no assoalho lá em cima, de ponta-cabeça (a chaminé desce pela parede).
+            var fp = RoomKit.Model($"{Folder}/Models/lareira.fbx", g, "Lareira_Modelo", new Vector3(0f, H, -0.78f), FireplaceYaw, 3.1f, true, stone);
+            if (fp != null)
+                fp.transform.localRotation = Quaternion.Euler(0f, 0f, 180f) * fp.transform.localRotation;
+            else
+            {
+                // Sem o modelo: blocos. Corpo de H-1.5 até o assoalho; a fornalha colada no assoalho lá em cima.
+                RoomKit.Box(g, "Corpo_Esq", new Vector3(-0.85f, H - 0.75f, -0.25f), new Vector3(0.4f, 1.5f, 0.5f), stone, false);
+                RoomKit.Box(g, "Corpo_Dir", new Vector3(0.85f, H - 0.75f, -0.25f), new Vector3(0.4f, 1.5f, 0.5f), stone, false);
+                RoomKit.Box(g, "Fornalha", new Vector3(0f, H - 0.55f, -0.12f), new Vector3(1.3f, 1.1f, 0.25f), soot, false);
+                RoomKit.Box(g, "Verga", new Vector3(0f, H - 1.25f, -0.25f), new Vector3(2.1f, 0.3f, 0.5f), stone, false);
+                RoomKit.Box(g, "Consolo", new Vector3(0f, H - 1.45f, -0.32f), new Vector3(2.4f, 0.08f, 0.64f), stone, false);
+            }
 
             // Lenha grudada no "chão" da lareira (lá em cima) e as chamas pendendo para baixo.
             var fire = RoomKit.Child(g, "Fogo", Vector3.zero);
@@ -330,6 +335,21 @@ namespace Somnium.EditorTools.Rooms
             var flowers = kit.Mat("Salao_Flores", new Color(0.65f, 0.15f, 0.25f), 0.2f);
             for (int i = 0; i < 5; i++)
                 RoomKit.Prim(PrimitiveType.Sphere, sb, "Flor", new Vector3(Mathf.Sin(i) * 0.08f, H - 1.32f - (i % 2) * 0.06f, 0.4f + Mathf.Cos(i) * 0.08f), Vector3.one * 0.09f, flowers);
+
+            // Mesinha do grupo (Mesa.blend) presa no assoalho lá em cima, perto da parede leste, com um candelabro pendurado.
+            var side = RoomKit.Child(root, "Mesinha_Invertida", new Vector3(HalfW - 1.1f, H, -4.6f));
+            var table = RoomKit.Model($"{Folder}/Models/mesa.fbx", side, "Mesa_Modelo", Vector3.zero, 20f, 0.78f, true, wood);
+            side.localRotation = Quaternion.Euler(0f, 0f, 180f); // assenta primeiro, depois vira de ponta-cabeça
+            if (table != null)
+            {
+                float top = RoomKit.WorldBounds(table).min.y - Origin.y; // tampo (agora embaixo)
+                var latao = kit.Mat("Salao_Latao", new Color(0.85f, 0.66f, 0.28f), 0.6f, 0.9f);
+                var cand = RoomKit.Child(root, "Candelabro_Mesinha", new Vector3(HalfW - 1.1f, top, -4.6f));
+                RoomKit.Prim(PrimitiveType.Cylinder, cand, "Base", new Vector3(0f, -0.02f, 0f), new Vector3(0.12f, 0.02f, 0.12f), latao);
+                RoomKit.Prim(PrimitiveType.Cylinder, cand, "Haste", new Vector3(0f, -0.16f, 0f), new Vector3(0.03f, 0.13f, 0.03f), latao);
+                RoomKit.Prim(PrimitiveType.Cylinder, cand, "Vela", new Vector3(0f, -0.36f, 0f), new Vector3(0.04f, 0.08f, 0.04f), kit.Mat("Salao_Cera", new Color(0.93f, 0.9f, 0.8f), 0.2f));
+                RoomKit.Prim(PrimitiveType.Sphere, cand, "Chama", new Vector3(0f, -0.49f, 0f), new Vector3(0.035f, 0.07f, 0.035f), kit.Emissive("Salao_Chama", new Color(1f, 0.72f, 0.35f), 3f));
+            }
         }
 
         // ------------------------------------------------------------------ quadros de ponta-cabeça
@@ -523,6 +543,9 @@ namespace Somnium.EditorTools.Rooms
         /// <summary>Altura onde ficam os pés da estátua (embaixo do plinto do pedestal invertido).</summary>
         const float PedestalFootY = 6.42f;
 
+        /// <summary>Giro da lareira do grupo para a boca ficar virada para a sala (ajustado pelas prévias).</summary>
+        const float FireplaceYaw = 0f;
+
         /// <summary>
         /// Pedestal clássico de ponta-cabeça, preso no alto do nicho: base larga com moldura encostada no topo,
         /// fuste com frisos e o plinto embaixo, onde os pés da estátua "pisam".
@@ -703,10 +726,37 @@ namespace Somnium.EditorTools.Rooms
             // as velas pendem com a chama para baixo e os cristais apontam para cima.
             var intact = RoomKit.Child(g, "Lustre", new Vector3(0f, LustreBottom, 0f));
             intact.gameObject.AddComponent<NaoAssar>();
-            RoomKit.Prim(PrimitiveType.Sphere, intact, "Gancho", new Vector3(0f, 0.04f, 0f), Vector3.one * 0.1f, gold);
-            RoomKit.Prim(PrimitiveType.Cylinder, intact, "Haste", new Vector3(0f, 0.6f, 0f), new Vector3(0.06f, 0.55f, 0.06f), gold);
-            RoomKit.Prim(PrimitiveType.Sphere, intact, "Bojo", new Vector3(0f, 1.25f, 0f), new Vector3(0.36f, 0.28f, 0.36f), gold);
-            foreach (var (y, r, n) in new[] { (0.55f, 1.0f, 12), (1.0f, 0.65f, 8) })
+            // Lustre baixado (lustre.zip, ferro com velas e corrente): de ponta-cabeça, a corrente e o suporte dele
+            // ficam EMBAIXO, emendando na corrente que sobe do chão. O pivô do "intact" continua sendo o ponto mais baixo.
+            const float lustreH = 2.0f; // topo a 6,6 m: ~1,6 m de folga até o tampo da mesa (8,24 m)
+            var flip = RoomKit.Child(intact, "Invertido", new Vector3(0f, lustreH, 0f));
+            var lustreMat = kit.Mat("Salao_LustreFerro", Color.white, 0.4f, 0.3f);
+            var tex = AssetDatabase.LoadAssetAtPath<Texture2D>($"{Folder}/Models/Lustre/lustreColor.png");
+            var nrm = AssetDatabase.LoadAssetAtPath<Texture2D>($"{Folder}/Models/Lustre/lustreNormal.png");
+            if (tex != null) lustreMat.SetTexture("_BaseMap", tex);
+            if (nrm != null) { lustreMat.SetTexture("_BumpMap", nrm); lustreMat.EnableKeyword("_NORMALMAP"); }
+            var lustreModel = RoomKit.Model($"{Folder}/Models/Lustre/lustre.fbx", flip, "Lustre_Modelo", Vector3.zero, 0f, lustreH, true, lustreMat);
+            flip.localRotation = Quaternion.Euler(0f, 0f, 180f); // assenta primeiro, depois vira: o suporte do lustre fica embaixo
+            // Velas do modelo apontam para baixo (está invertido): chamas emissivas penduradas nelas.
+            if (lustreModel != null)
+            {
+                var lb = RoomKit.WorldBounds(lustreModel);
+                float rim = Mathf.Max(lb.size.x, lb.size.z) * 0.44f;
+                for (int i = 0; i < 6; i++)
+                {
+                    float a = i * Mathf.PI / 3f + 0.25f;
+                    var fl = RoomKit.Prim(PrimitiveType.Sphere, intact, "Chama", new Vector3(Mathf.Cos(a) * rim, lustreH - 0.42f, Mathf.Sin(a) * rim), new Vector3(0.05f, 0.1f, 0.05f), flame);
+                    fl.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
+                }
+            }
+            var procedural = lustreModel == null;
+            if (procedural)
+            {
+                RoomKit.Prim(PrimitiveType.Sphere, intact, "Gancho", new Vector3(0f, 0.04f, 0f), Vector3.one * 0.1f, gold);
+                RoomKit.Prim(PrimitiveType.Cylinder, intact, "Haste", new Vector3(0f, 0.6f, 0f), new Vector3(0.06f, 0.55f, 0.06f), gold);
+                RoomKit.Prim(PrimitiveType.Sphere, intact, "Bojo", new Vector3(0f, 1.25f, 0f), new Vector3(0.36f, 0.28f, 0.36f), gold);
+            }
+            foreach (var (y, r, n) in procedural ? new[] { (0.55f, 1.0f, 12), (1.0f, 0.65f, 8) } : new (float, float, int)[0])
             {
                 for (int k = 0; k < 20; k++) // aro vazado: segmentos em volta (um disco sólido tapava a vista)
                 {

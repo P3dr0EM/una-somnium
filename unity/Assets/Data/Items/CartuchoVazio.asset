@@ -15,6 +15,6 @@ MonoBehaviour:
   displayName: "Cartucho Qu\xEDmico Vazio"
   description: "Um cartucho de sistema de irriga\xE7\xE3o. Est\xE1 vazio."
   icon: {fileID: 0}
-  inspectModel: {fileID: 0}
-  inspectSize: 0.22
+  inspectModel: {fileID: 919132149155446097, guid: 51b4078dde7a99a498245bb564bd4f78, type: 3}
+  inspectSize: 0.18
   combinations: []

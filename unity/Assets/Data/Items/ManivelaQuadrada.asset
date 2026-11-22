@@ -15,6 +15,6 @@ MonoBehaviour:
   displayName: Manivela Quadrada
   description: Uma manivela de ponta quadrada. Deve encaixar em algum mecanismo.
   icon: {fileID: 0}
-  inspectModel: {fileID: 0}
-  inspectSize: 0.22
+  inspectModel: {fileID: 4882832625209072762, guid: 9da5773cf7e642b43bfc61ff4a4737c7, type: 3}
+  inspectSize: 0.26
   combinations: []

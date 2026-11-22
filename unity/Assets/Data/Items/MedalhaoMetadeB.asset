@@ -15,6 +15,6 @@ MonoBehaviour:
   displayName: "Outra Metade do Medalh\xE3o"
   description: "A outra metade do medalh\xE3o do sol."
   icon: {fileID: 0}
-  inspectModel: {fileID: 0}
-  inspectSize: 0.22
+  inspectModel: {fileID: 919132149155446097, guid: d498c7136c4e76445872f0512973c486, type: 3}
+  inspectSize: 0.15
   combinations: []

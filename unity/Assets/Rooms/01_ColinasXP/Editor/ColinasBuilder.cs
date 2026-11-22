@@ -433,11 +433,15 @@ namespace Somnium.EditorTools.Rooms
             var g = Child(root, "Pickup_Manivela", p);
             g.localRotation = Quaternion.Euler(0f, 35f, 0f);
 
-            var shaft = Box(g, "Eixo", new Vector3(0f, 0f, 0f), new Vector3(0.035f, 0.035f, 0.32f), iron);
-            var arm = Box(g, "Braco", new Vector3(0.11f, 0f, 0.16f), new Vector3(0.22f, 0.03f, 0.035f), iron);
-            var handle = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            Place(handle, g, "Cabo", new Vector3(0.22f, 0.05f, 0.16f), new Vector3(0.04f, 0.05f, 0.04f), grip);
-            var socket = Box(g, "Encaixe", new Vector3(0f, 0f, -0.17f), new Vector3(0.055f, 0.055f, 0.05f), iron);
+            // Modelo do grupo (manivela2), deitado na grama; sem ele, blocos.
+            if (RoomKit.Model($"{ModelosGrupo.ItemModels}/manivela.fbx", g, "Manivela_Modelo", new Vector3(0.05f, -0.02f, 0f), 0f, 0.55f, false, iron) == null)
+            {
+                Box(g, "Eixo", new Vector3(0f, 0f, 0f), new Vector3(0.035f, 0.035f, 0.32f), iron);
+                Box(g, "Braco", new Vector3(0.11f, 0f, 0.16f), new Vector3(0.22f, 0.03f, 0.035f), iron);
+                var handle = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                Place(handle, g, "Cabo", new Vector3(0.22f, 0.05f, 0.16f), new Vector3(0.04f, 0.05f, 0.04f), grip);
+                Box(g, "Encaixe", new Vector3(0f, 0f, -0.17f), new Vector3(0.055f, 0.055f, 0.05f), iron);
+            }
             foreach (var c in g.GetComponentsInChildren<Collider>()) Object.DestroyImmediate(c);
 
             var col = g.gameObject.AddComponent<BoxCollider>(); // alvo maior para a mira
@@ -531,10 +535,14 @@ namespace Somnium.EditorTools.Rooms
 
             // Pote de ração (blockout; aparece ao alimentar).
             var bowl = Child(root, "PoteRacao", p + new Vector3(0f, 0f, 0.45f));
-            var dish = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            Place(dish, bowl, "Pote", new Vector3(0f, 0.03f, 0f), new Vector3(0.2f, 0.03f, 0.2f), Mat("Colinas_Pote", new Color(0.2f, 0.35f, 0.75f), 0.5f));
-            var food = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            Place(food, bowl, "Racao", new Vector3(0f, 0.05f, 0f), new Vector3(0.16f, 0.012f, 0.16f), Mat("Colinas_Racao", new Color(0.45f, 0.27f, 0.12f), 0.1f));
+            // Pote do grupo (pote_de_racao.blend, o pote cheio de ração); sem ele, blocos.
+            if (RoomKit.Model("Assets/Rooms/01_ColinasXP/Models/pote_racao.fbx", bowl, "Pote_Modelo", Vector3.zero, 0f, 0.24f, false, null) == null)
+            {
+                var dish = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                Place(dish, bowl, "Pote", new Vector3(0f, 0.03f, 0f), new Vector3(0.2f, 0.03f, 0.2f), Mat("Colinas_Pote", new Color(0.2f, 0.35f, 0.75f), 0.5f));
+                var food = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                Place(food, bowl, "Racao", new Vector3(0f, 0.05f, 0f), new Vector3(0.16f, 0.012f, 0.16f), Mat("Colinas_Racao", new Color(0.45f, 0.27f, 0.12f), 0.1f));
+            }
             foreach (var c in bowl.GetComponentsInChildren<Collider>()) Object.DestroyImmediate(c);
             bowl.gameObject.SetActive(false);
 

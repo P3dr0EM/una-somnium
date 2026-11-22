@@ -291,3 +291,38 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 - **Créditos CC BY completos** (P11): gato (boud), Low-Poly Statue (Nikita Borovkov) e Venus (Enlil Scan), em `CREDITOS.md`.
 - **Pedestais das estátuas** refeitos: pedestal clássico de ponta-cabeça preso no alto do nicho (base larga com moldura, mísulas na parede, fuste com frisos e plinto embaixo, onde ficam os pés). A **Vênus** foi girada 180° (estava de frente para a parede).
 - **Flor da planta alinhada ao caule**: a coroa era centralizada pelo contorno, mas as pétalas são assimétricas e a base delas ficava deslocada. Agora o encaixe é calculado pela geometria (média dos vértices mais internos da coroa) e colocado sobre o miolo (`AlignCrownToStem`).
+
+## 2026-11-20
+
+### Modelos do grupo no jogo
+- Chegaram os modelos dos colegas em `models/` e `models/modelos/Nova pasta/`. Todos foram analisados no Blender (tamanho, triângulos, materiais) e exportados para FBX por `D:\Projetos\Somnium\Claude\scripts\exporta_modelo.py`, sem alterar os `.blend`. O script aplica os modificadores, reduz os triângulos quando passam do limite, mantém só as partes pedidas e corta ao meio.
+  - **Herbicida** 63.790 → 2.494 triângulos; **sprinkler** 6.276 → 1.492; **medalhão** 6.688 → 1.498, mais as **metades** cortadas ao meio para a Metade A e a Metade B.
+- **Itens com modelo na inspeção 3D** (inventário): Alicate (`alicate2`), Manivela (`manivela2`), Cartucho Vazio, Herbicida, Medalhão do Sol e as duas metades. Novo `ModelosGrupo.cs` (menu **Somnium → Modelos → Aplicar modelos do grupo**).
+- **Nas salas**:
+  - **Saguão**: a estátua do grupo (guerreiro no plinto) sobre o pedestal do medalhão; o medalhão encaixado é o modelo.
+  - **Colinas XP**: a Manivela na grama e o pote de ração (o pote cheio) que aparece ao alimentar o gato.
+  - **Escritório**: mesas e cadeiras novas e o **cofre** como decoração ("ninguém lembra a combinação").
+  - **Salão Invertido**:
+    - a **lareira** do grupo pendurada de ponta-cabeça;
+    - a **mesa** como mesinha invertida com candelabro;
+    - o **lustre** baixado (`lustre.zip`, ferro com velas e textura) no lugar do lustre de blocos, invertido: a corrente dele emenda na corrente que sobe do chão.
+    - A manivela encaixada no guincho continua de blocos (precisa girar no eixo do encaixe).
+  - **Estufa**: o **cartucho** na bancada, os **sprinklers** do grupo, vasos com a **planta neon** (o neon feito no Unity, pulsando) e um **terrário**: a cúpula de vidro com uma planta neon dentro.
+- **Modelos pretos em salas com luz assada**: os FBX não tinham UV de lightmap. Agora `ModelosGrupo` liga "Generate Lightmap UVs" em todos os modelos das salas.
+- Fora do jogo: as boias (eram da Sala das Piscinas, cortada) e a `alicate` e a `manivela quadrada` (versões alternativas).
+
+## 2026-11-21
+
+### Rodada de ajustes dos modelos (teste do P3DR0EM)
+- **Estátua do Saguão**: estava de lado (girada 90° para olhar a entrada). A iluminação estranha vinha do lightmap sobre os UVs gerados do modelo (manchas escuras); agora ela é iluminada pelas Light Probes (`NaoAssar`).
+- **Lustre do Salão** encostava na mesa invertida (topo a 8,3 m e tampo a 8,24 m). Agora o lustre fica a 4,6–6,6 m, com ~1,6 m de folga; a queda continua de ~4,6 m.
+- **Manivela branca na inspeção**: o modelo veio do Blender sem material. `ModelosGrupo` cria um prefab com material de ferro escuro para os modelos sem material (`Shared/Models/Itens/Prefabs`).
+- **Medalhão desalinhado no encaixe**: o giro era aplicado em volta de um pivô fora do centro do disco. Agora o modelo é centrado num suporte vazio e só o suporte gira; fica centrado no encaixe.
+- **Pétala tapando a taça** depois de murchar: as pétalas **encolhem até sumir** na primeira metade da animação (`PlantaMurcha.shrinkAway`), antes de o corpo desabar.
+
+### Escada e estátuas no pedestal (modelos novos do grupo)
+- **Estátua central do Saguão** virada para o spawn (giro 180°).
+- **`escada.fbx`** do grupo nos dois lances da escadaria. Os degraus e corrimãos de bloco ficam só como **colisão invisível**: a rampa continua dando a subida suave em VR.
+- **`pedestal.fbx`** (estátua com pedestal) no **pé de cada escada**, do lado de fora, de frente para o spawn, iluminadas pelas probes.
+- Retorno do teste: transição da planta e altura do lustre aprovadas.
+- Pasta `models/modelos/Nova pasta` removida pelo P3DR0EM (as cópias dos modelos que vinham dela já estão em `models/` ou exportadas para o Unity; as boias, da Sala das Piscinas cortada, saíram).

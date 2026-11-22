@@ -122,6 +122,7 @@ namespace Somnium.EditorTools.Rooms
             BuildIvy();
             BuildPlanters();
             BuildBenchAndProps();
+            BuildNeonPlants();
             var plant = BuildFountainAndPlant();
             BuildIrrigation(plant);
             BuildLights();
@@ -362,8 +363,12 @@ namespace Somnium.EditorTools.Rooms
 
             // Cartucho Vazio (item): pequeno cilindro metálico com brilho.
             var cart = RoomKit.Child(b, "Pickup_CartuchoVazio", new Vector3(0.8f, 0.89f, 0.15f));
-            RoomKit.Prim(PrimitiveType.Cylinder, cart, "Cartucho", new Vector3(0f, 0.07f, 0f), new Vector3(0.07f, 0.07f, 0.07f), tin);
-            RoomKit.Prim(PrimitiveType.Cylinder, cart, "Tampa", new Vector3(0f, 0.145f, 0f), new Vector3(0.05f, 0.012f, 0.05f), iron);
+            // Modelo do grupo (cartuchoVazio.blend); sem ele, cilindros.
+            if (RoomKit.Model($"{ModelosGrupo.ItemModels}/cartucho.fbx", cart, "Cartucho_Modelo", Vector3.zero, 0f, 0.17f, true, null) == null)
+            {
+                RoomKit.Prim(PrimitiveType.Cylinder, cart, "Cartucho", new Vector3(0f, 0.07f, 0f), new Vector3(0.07f, 0.07f, 0.07f), tin);
+                RoomKit.Prim(PrimitiveType.Cylinder, cart, "Tampa", new Vector3(0f, 0.145f, 0f), new Vector3(0.05f, 0.012f, 0.05f), iron);
+            }
             var cc = cart.gameObject.AddComponent<BoxCollider>(); cc.center = new Vector3(0f, 0.08f, 0f); cc.size = new Vector3(0.3f, 0.3f, 0.3f); cc.isTrigger = true;
             var cp = cart.gameObject.AddComponent<ItemPickup>(); cp.item = RoomKit.Item("CartuchoVazio"); cp.saveId = "estufa/cartucho";
             var glint = RoomKit.Prim(PrimitiveType.Quad, cart, "Brilho", new Vector3(0.03f, 0.18f, 0f), Vector3.one * 0.1f, kit.Emissive("Estufa_Brilho", new Color(1f, 0.97f, 0.85f), 3f));
@@ -377,6 +382,72 @@ namespace Somnium.EditorTools.Rooms
             nm.message = "\"Aquela coisa na fonte não para de crescer. Um herbicida forte no tanque da irrigação deve resolver. O ácido do almoxarifado do escritório serve, num cartucho.\"";
             nm.duration = 7f;
             RoomKit.SetPrompt(nm, "Ler bilhete");
+        }
+
+        // ------------------------------------------------------------------ plantas neon do grupo + terrário (cúpula)
+
+        /// <summary>
+        /// Vasos com a planta do grupo (planta.blend): o vaso fica de barro e a planta ganha o "neon" (emissão que pulsa),
+        /// como os modeladores pediram ("neon tem que ser feito na Unity"). E um terrário: a cúpula do grupo em vidro,
+        /// sobre um pedestal, com uma planta neon pequena dentro.
+        /// </summary>
+        static void BuildNeonPlants()
+        {
+            var clay = kit.Mat("Estufa_Barro", new Color(0.5f, 0.27f, 0.17f), 0.2f);
+            var neon = kit.Emissive("Estufa_Neon", new Color(0.3f, 1f, 0.75f), 1.4f);
+            var stone = kit.Mat("Estufa_Pedra", new Color(0.36f, 0.36f, 0.33f), 0.25f);
+            var g = RoomKit.Child(root, "Plantas_Neon", Vector3.zero);
+            g.gameObject.AddComponent<NaoAssar>(); // pulsam (emissão muda), não entram no bake
+
+            GameObject Pot(Transform parent, string name, Vector3 pos, float height)
+            {
+                var m = RoomKit.Model($"{ModelFolder}/planta_neon.fbx", parent, name, pos, R(0f, 360f), height, true, null);
+                if (m == null) return null;
+                var glow = new List<Renderer>();
+                foreach (var r in m.GetComponentsInChildren<Renderer>())
+                {
+                    // O vaso é a peça mais baixa (objeto "Cylinder"); o resto é a planta.
+                    bool pot = r.name == "Cylinder";
+                    r.sharedMaterials = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Repeat(pot ? clay : neon, r.sharedMaterials.Length));
+                    if (!pot) glow.Add(r);
+                }
+                var pulse = m.AddComponent<PulsoBrilho>();
+                pulse.renderers = glow.ToArray();
+                pulse.emission = new Color(0.3f, 1f, 0.75f);
+                pulse.minIntensity = 0.5f;
+                pulse.maxIntensity = 1.6f;
+                pulse.period = R(2.6f, 4f);
+                pulse.glowLight = RoomKit.PointLight(m.transform, "Luz_Neon", new Vector3(0f, height * 0.75f, 0f), new Color(0.35f, 1f, 0.75f), 0.8f, 2.5f);
+                return m;
+            }
+
+            Pot(g, "Vaso_Neon_A", new Vector3(-4.4f, 0f, -5.3f), 0.75f);
+            Pot(g, "Vaso_Neon_B", new Vector3(1.6f, 0f, -5.4f), 0.65f);
+            Pot(g, "Vaso_Neon_C", new Vector3(-4.4f, 0f, 5.4f), 0.8f);
+
+            // Terrário: pedestal de pedra + cúpula de vidro (modelo do grupo) com uma planta neon pequena dentro.
+            var t = RoomKit.Child(g, "Terrario", new Vector3(4.1f, 0f, 5.2f));
+            RoomKit.Box(t, "Pedestal", new Vector3(0f, 0.42f, 0f), new Vector3(0.5f, 0.84f, 0.5f), stone, true);
+            Pot(t, "Planta_Terrario", new Vector3(0f, 0.85f, 0f), 0.32f);
+            var glass = GlassMat();
+            var dome = RoomKit.Model($"{ModelFolder}/cupula.fbx", t, "Cupula", new Vector3(0f, 0.84f, 0f), 0f, 0.62f, false, glass);
+            if (dome != null) foreach (var r in dome.GetComponentsInChildren<Renderer>()) r.shadowCastingMode = ShadowCastingMode.Off;
+        }
+
+        /// <summary>Vidro transparente esverdeado (URP Lit, superfície transparente).</summary>
+        static Material GlassMat()
+        {
+            var mat = kit.Mat("Estufa_VidroTerrario", new Color(0.7f, 0.9f, 0.85f, 0.22f), 0.95f);
+            mat.SetFloat("_Surface", 1f);
+            mat.SetFloat("_Blend", 0f);
+            mat.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
+            mat.SetFloat("_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
+            mat.SetFloat("_ZWrite", 0f);
+            mat.SetFloat("_Cull", 0f);
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            mat.renderQueue = (int)RenderQueue.Transparent;
+            EditorUtility.SetDirty(mat);
+            return mat;
         }
 
         // ------------------------------------------------------------------ fonte com a planta (Chave 3 + Metade B na taça)
@@ -542,6 +613,7 @@ namespace Somnium.EditorTools.Rooms
             var tint = new List<Renderer>(model.GetComponentsInChildren<Renderer>()) { vines.GetComponent<Renderer>() };
             wither.tint = tint.ToArray();
             wither.disableOnWither = new[] { pods.gameObject, block };
+            wither.shrinkAway = new[] { head };
             wither.sound = RoomKit.Sound3D(g.gameObject, WitherClip(), 0.9f, 3f, 25f);
             return wither;
         }
@@ -623,7 +695,9 @@ namespace Somnium.EditorTools.Rooms
             foreach (float dz in new[] { -0.8f, 0f, 0.8f })
             {
                 var head = RoomKit.Child(pipe, "Sprinkler", new Vector3(FountainPos.x, pipeY - 0.08f, FountainPos.z + dz));
-                RoomKit.Prim(PrimitiveType.Cylinder, head, "Bico", Vector3.zero, new Vector3(0.09f, 0.05f, 0.09f), dark);
+                // Sprinkler do grupo (sprinkler.blend): o modelo inteiro (cano em L com o bico) pendurado da tubulação.
+                var spr = RoomKit.Model($"{ModelFolder}/sprinkler.fbx", head, "Sprinkler_Modelo", new Vector3(0f, -0.02f, 0f), 90f, 0.7f, false, null);
+                if (spr == null) RoomKit.Prim(PrimitiveType.Cylinder, head, "Bico", Vector3.zero, new Vector3(0.09f, 0.05f, 0.09f), dark);
                 var em = RoomKit.Child(head, "Nevoa", new Vector3(0f, -0.06f, 0f));
                 em.localRotation = Quaternion.Euler(90f, 0f, 0f); // o cone emite em +Z local → para baixo
                 var ps = em.gameObject.AddComponent<ParticleSystem>();
@@ -753,6 +827,7 @@ namespace Somnium.EditorTools.Rooms
                 s.Shot("6_fundo", O(2.5f, 1.65f, -4.8f), O(-2f, 1.5f, HalfD));
                 s.Shot("8_flor", O(1.8f, 2.6f, F.z - 3.2f), O(F.x - 0.6f, 2.7f, F.z + 0.5f));
                 s.Shot("8b_flor_baixo", O(0.6f, 1.65f, F.z - 1.9f), O(F.x - 0.5f, 2.9f, F.z + 0.6f));
+                s.Shot("9_terrario_neon", O(2.2f, 1.65f, 3.2f), O(4.1f, 1.0f, 5.2f));
 
                 var irr = GameObject.Find("Estufa/Irrigacao/Painel").GetComponent<Irrigacao>();
                 irr.Snap();
