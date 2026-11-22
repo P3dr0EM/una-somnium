@@ -325,3 +325,4 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 - **`escada.fbx`** do grupo nos dois lances da escadaria. Os degraus e corrimãos de bloco ficam só como **colisão invisível**: a rampa continua dando a subida suave em VR.
 - **`pedestal.fbx`** (estátua com pedestal) no **pé de cada escada**, do lado de fora, de frente para o spawn, iluminadas pelas probes.
 - Retorno do teste: transição da planta e altura do lustre aprovadas.
+- Pasta `models/modelos/Nova pasta` removida pelo P3DR0EM (as cópias dos modelos que vinham dela já estão em `models/` ou exportadas para o Unity; as boias, da Sala das Piscinas cortada, saíram).
