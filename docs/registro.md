@@ -319,3 +319,9 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 - **Manivela branca na inspeção**: o modelo veio do Blender sem material. `ModelosGrupo` cria um prefab com material de ferro escuro para os modelos sem material (`Shared/Models/Itens/Prefabs`).
 - **Medalhão desalinhado no encaixe**: o giro era aplicado em volta de um pivô fora do centro do disco. Agora o modelo é centrado num suporte vazio e só o suporte gira; fica centrado no encaixe.
 - **Pétala tapando a taça** depois de murchar: as pétalas **encolhem até sumir** na primeira metade da animação (`PlantaMurcha.shrinkAway`), antes de o corpo desabar.
+
+### Escada e estátuas no pedestal (modelos novos do grupo)
+- **Estátua central do Saguão** virada para o spawn (giro 180°).
+- **`escada.fbx`** do grupo nos dois lances da escadaria. Os degraus e corrimãos de bloco ficam só como **colisão invisível**: a rampa continua dando a subida suave em VR.
+- **`pedestal.fbx`** (estátua com pedestal) no **pé de cada escada**, do lado de fora, de frente para o spawn, iluminadas pelas probes.
+- Retorno do teste: transição da planta e altura do lustre aprovadas.

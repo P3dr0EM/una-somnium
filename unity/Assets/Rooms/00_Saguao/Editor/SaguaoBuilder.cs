@@ -41,7 +41,7 @@ namespace Somnium.EditorTools.Rooms
         /// <summary>Assar a luz ao gerar (leva alguns minutos). Desligue para gerar rápido enquanto mexe no layout.</summary>
         static readonly bool BakeLight = true;
         /// <summary>Giro da estátua do grupo para olhar para a entrada (ajustado pelas prévias).</summary>
-        const float StatueYaw = 90f;
+        const float StatueYaw = 180f; // de frente para o spawn (sul)
         const string MatFolder = Folder + "/Materials";
         const string PersistenciaPath = "Assets/Scenes/persistencia.unity";
         const string ItemsFolder = "Assets/Data/Items";
@@ -346,8 +346,42 @@ namespace Somnium.EditorTools.Rooms
                                    new Vector3(xc + side, BalconyTop / 2f + 0.55f, (1.1f + BalconyZ) / 2f), new Vector3(0.08f, 1.1f, len), wood);
                     rail.transform.localRotation = Quaternion.Euler(-ang, 0f, 0f);
                 }
+
+                // Escada do grupo (escada.fbx): vira o visual do lance. Degraus e corrimãos de bloco ficam só como colisão invisível
+                // (a rampa continua dando a subida suave).
+                var model = RoomKit.Model("Assets/Rooms/00_Saguao/Models/escada.fbx", stair, "Escada_Modelo", new Vector3(xc, 0f, (1.1f + BalconyZ) / 2f), StairYaw, StairHeight, true, null);
+                if (model != null)
+                {
+                    foreach (var r in model.GetComponentsInChildren<Renderer>())
+                    {
+                        var ms = r.sharedMaterials;
+                        for (int k = 0; k < ms.Length; k++)
+                            ms[k] = ms[k] != null && ms[k].name.Contains("Tapete") ? carpet : wood;
+                        r.sharedMaterials = ms;
+                    }
+                    foreach (var r in stair.GetComponentsInChildren<MeshRenderer>())
+                        if (!r.transform.IsChildOf(model.transform)) r.enabled = false;
+                }
+            }
+
+            // Estátuas do grupo no pedestal (pedestal.fbx): uma no pé de cada escada, do lado de fora, viradas para o hall.
+            var marble = Mat("Saguao_MarmoreEstatua", new Color(0.78f, 0.76f, 0.7f), 0.3f);
+            foreach (var (name, x) in new[] { ("Esq", -3.9f), ("Dir", 3.9f) })
+            {
+                var st = RoomKit.Model("Assets/Rooms/00_Saguao/Models/pedestal_estatua.fbx", g, $"Estatua_Pedestal_{name}", new Vector3(x, 0f, 0.9f), PedestalStatueYaw, 2.4f, true, marble);
+                if (st == null) continue;
+                var b = RoomKit.WorldBounds(st);
+                var col = st.AddComponent<BoxCollider>();
+                col.center = st.transform.InverseTransformPoint(b.center);
+                col.size = b.size;
+                st.AddComponent<NaoAssar>(); // luz pelas probes (UV gerado do modelo dá manchas no lightmap)
             }
         }
+
+        /// <summary>Altura total do modelo da escada (com as laterais) e giro para subir em direção ao mezanino (+Z).</summary>
+        const float StairHeight = 4.58f, StairYaw = 0f;
+        /// <summary>Giro das estátuas no pedestal para olharem o hall (ajustado pelas prévias).</summary>
+        const float PedestalStatueYaw = 90f; // de frente para o spawn (sul)
 
         // ------------------------------------------------------------------ porta principal (5 fechaduras → final)
 
