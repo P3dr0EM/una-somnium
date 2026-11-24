@@ -526,8 +526,13 @@ namespace Somnium.EditorTools.Rooms
             var collar = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             Place(collar, cat, "Coleira", neckLocal, new Vector3(0.11f, 0.008f, 0.11f), collarMat);
             Object.DestroyImmediate(collar.GetComponent<Collider>());
-            var key = Box(cat, "ChaveColeira", neckLocal + new Vector3(0f, -0.04f, 0.06f), new Vector3(0.025f, 0.06f, 0.008f), gold);
-            Object.DestroyImmediate(key.GetComponent<Collider>());
+            // Modelo da chave pendurado em pé (comprimento na vertical, de frente para quem olha o gato).
+            var key = RoomKit.Key(cat, "ChaveColeira", neckLocal + new Vector3(0f, -0.045f, 0.065f), 0.07f, gold, Quaternion.Euler(0f, 90f, 90f)); // argola em cima, presa na coleira
+            if (key == null)
+            {
+                key = Box(cat, "ChaveColeira", neckLocal + new Vector3(0f, -0.04f, 0.06f), new Vector3(0.025f, 0.06f, 0.008f), gold);
+                Object.DestroyImmediate(key.GetComponent<Collider>());
+            }
 
             var col = cat.gameObject.AddComponent<BoxCollider>(); // alvo da mira (um pouco maior que o gato)
             col.center = new Vector3(0f, headY * 0.5f, 0f);

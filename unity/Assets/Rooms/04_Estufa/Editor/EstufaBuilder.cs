@@ -487,7 +487,8 @@ namespace Somnium.EditorTools.Rooms
             // Itens na taça: Chave 3 e Metade B do Medalhão.
             var key = RoomKit.Child(g, "Pickup_Chave3", new Vector3(-0.12f, BowlY + 0.01f, 0.05f));
             key.localRotation = Quaternion.Euler(0f, 30f, 0f);
-            RoomKit.Box(key, "Chave", Vector3.zero, new Vector3(0.18f, 0.03f, 0.06f), gold, false);
+            if (RoomKit.Key(key, "Chave", Vector3.zero, 0.18f, gold) == null) // modelo do grupo; sem ele, bloco
+                RoomKit.Box(key, "Chave", Vector3.zero, new Vector3(0.18f, 0.03f, 0.06f), gold, false);
             var kc = key.gameObject.AddComponent<BoxCollider>(); kc.size = new Vector3(0.3f, 0.2f, 0.25f); kc.isTrigger = true;
             var kp = key.gameObject.AddComponent<ItemPickup>(); kp.item = RoomKit.Item("Chave3"); kp.saveId = "estufa/chave3";
             var half = RoomKit.Child(g, "Pickup_MetadeB", new Vector3(0.14f, BowlY + 0.01f, -0.06f));

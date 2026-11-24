@@ -320,7 +320,8 @@ namespace Somnium.EditorTools.Rooms
             // Chave 2: objeto sem escala com o item e a colisão; bloco e brilho como filhos (somem juntos ao pegar).
             var key = RoomKit.Child(pit, "Pickup_Chave2", new Vector3(-0.2f, -PitDepth + 0.02f, zc - 0.1f));
             key.localRotation = Quaternion.Euler(0f, 25f, 0f);
-            RoomKit.Box(key, "Chave", Vector3.zero, new Vector3(0.18f, 0.03f, 0.06f), gold, false);
+            if (RoomKit.Key(key, "Chave", Vector3.zero, 0.18f, kit.Mat("Escritorio_ChaveDourada", new Color(0.9f, 0.72f, 0.28f), 0.55f, 0.35f)) == null) // modelo do grupo; sem ele, bloco
+                RoomKit.Box(key, "Chave", Vector3.zero, new Vector3(0.18f, 0.03f, 0.06f), gold, false);
             var kc = key.gameObject.AddComponent<BoxCollider>(); kc.size = new Vector3(0.36f, 0.24f, 0.3f); kc.isTrigger = true;
             var kp = key.gameObject.AddComponent<ItemPickup>(); kp.item = RoomKit.Item("Chave2"); kp.saveId = "escritorio/chave2";
             // O nicho é escuro: um brilho que pisca de vez em quando, como na Manivela da Colinas.

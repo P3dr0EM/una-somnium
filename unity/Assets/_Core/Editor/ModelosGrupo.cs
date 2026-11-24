@@ -27,6 +27,10 @@ namespace Somnium.EditorTools
             ("MedalhaoMetadeA", "medalhao_metade.fbx", 0.15f),
             ("MedalhaoMetadeB", "medalhao_metade.fbx", 0.15f),
             ("LataDeRacao", "lata_racao.fbx", 0.16f),
+            ("Chave1", "chave.fbx", 0.2f),
+            ("Chave2", "chave.fbx", 0.2f),
+            ("Chave3", "chave.fbx", 0.2f),
+            ("Chave4", "chave.fbx", 0.2f),
         };
 
         /// <summary>Modelos que vieram sem material do Blender (ficam brancos): cor (r, g, b, metálico).</summary>
@@ -34,6 +38,7 @@ namespace Somnium.EditorTools
         {
             { "manivela.fbx", new Vector4(0.3f, 0.29f, 0.28f, 0.6f) }, // ferro escuro
             { "lata_racao.fbx", new Vector4(1f, 1f, 1f, 0.3f) },        // textura do grupo
+            { "chave.fbx", new Vector4(0.83f, 0.64f, 0.25f, 0.4f) },     // latão dourado
 
         };
 

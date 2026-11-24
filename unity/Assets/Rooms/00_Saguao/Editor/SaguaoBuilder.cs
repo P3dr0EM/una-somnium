@@ -45,6 +45,8 @@ namespace Somnium.EditorTools.Rooms
         /// <summary>Porta principal do grupo: giro do modelo (frente com as fechaduras para dentro do hall) e troca das folhas, se vierem trocadas.</summary>
         const float MainDoorYaw = 90f;
         const bool MainDoorSwapLeaves = false;
+        /// <summary>Giro da chave inserida na fechadura (90 ou -90: troca qual ponta fica para fora, a argola deve ficar no hall).</summary>
+        const float InsertedKeyYaw = 90f;
         const string MatFolder = Folder + "/Materials";
         const string PersistenciaPath = "Assets/Scenes/persistencia.unity";
         const string ItemsFolder = "Assets/Data/Items";
@@ -461,8 +463,14 @@ namespace Somnium.EditorTools.Rooms
                     var plate = Box(locks, $"Fechadura_{i + 1}", new Vector3(0f, y, -0.07f), new Vector3(0.14f, 0.18f, 0.04f), iron);
                     Object.DestroyImmediate(plate.GetComponent<Collider>());
                 }
-                var key = Box(locks, $"ChaveInserida_{i + 1}", new Vector3(modelLocks ? 0.06f : 0f, y, -0.14f), new Vector3(0.05f, 0.12f, 0.08f), gold);
-                Object.DestroyImmediate(key.GetComponent<Collider>());
+                // Modelo da chave enfiado na fechadura: haste para dentro da porta (Z), argola em pé virada para o hall.
+                var key = RoomKit.Key(locks, $"ChaveInserida_{i + 1}", new Vector3(modelLocks ? 0.06f : 0f, y, -0.12f), 0.15f, KeyGold(),
+                                      Quaternion.Euler(0f, 0f, 90f) * Quaternion.Euler(0f, InsertedKeyYaw, 0f));
+                if (key == null)
+                {
+                    key = Box(locks, $"ChaveInserida_{i + 1}", new Vector3(modelLocks ? 0.06f : 0f, y, -0.14f), new Vector3(0.05f, 0.12f, 0.08f), gold);
+                    Object.DestroyImmediate(key.GetComponent<Collider>());
+                }
                 key.SetActive(false);
                 inserted.Add(key);
             }
@@ -566,8 +574,13 @@ namespace Somnium.EditorTools.Rooms
 
             // Tampa no alto do pedestal: some ao encaixar o medalhão e revela a Chave 4.
             var lid = Box(g, "Tampa", new Vector3(0f, 1.04f, -0.38f), new Vector3(0.45f, 0.08f, 0.3f), dark);
-            var key = Box(g, "Pickup_Chave4", new Vector3(0f, 1.03f, -0.38f), new Vector3(0.18f, 0.03f, 0.06f), gold);
-            key.GetComponent<BoxCollider>().size = new Vector3(2f, 6f, 4f); // alvo maior para a mira
+            var key = RoomKit.Key(g, "Pickup_Chave4", new Vector3(0f, 1.03f, -0.38f), 0.18f, KeyGold());
+            if (key != null) key.AddComponent<BoxCollider>().size = new Vector3(0.36f, 0.18f, 0.24f); // alvo maior para a mira
+            else
+            {
+                key = Box(g, "Pickup_Chave4", new Vector3(0f, 1.03f, -0.38f), new Vector3(0.18f, 0.03f, 0.06f), gold);
+                key.GetComponent<BoxCollider>().size = new Vector3(2f, 6f, 4f);
+            }
             var pickup = key.AddComponent<ItemPickup>();
             pickup.item = Item("Chave4");
             pickup.saveId = "saguao/chave4";
@@ -890,6 +903,9 @@ namespace Somnium.EditorTools.Rooms
         }
 
         static Shader LitShader => Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+
+        /// <summary>Dourado fosco das chaves: metal puro (metálico 1) fica preto com a luz assada.</summary>
+        static Material KeyGold() => Mat("Saguao_ChaveDourada", new Color(0.86f, 0.66f, 0.3f), 0.55f, 0.35f);
 
         static Material Mat(string name, Color color, float smoothness, float metallic = 0f)
         {

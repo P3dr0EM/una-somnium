@@ -349,3 +349,11 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 - **Correção:** `ModelosGrupo.ConfigureModelImports` agora desliga **importar luzes e câmeras** em todos os modelos das salas e itens (31 reimportados) e as salas foram regeradas.
 - Teste no executável com `TesteAutomatico.cs` (novo, só age com argumentos): `Somnium.exe -somniumIrPara <cena> -somniumCaptura <png>` troca de sala sozinho, tira um print e lista as luzes com sombra. Também aceita `-somniumDesligar Nome1,Nome2` e `-somniumMedir Nome1,Nome2` para isolar problemas. Escritório conferido no PC e no PC VR.
 - APK, `Somnium_PC.zip` e `Somnium_PC_VR.zip` gerados de novo.
+
+### Modelo da chave (enviado pelo Caio)
+- `models/chave.fbx` → `Shared/Models/Itens/chave.fbx` (150 triângulos, sem material: recebe dourado fosco).
+- Novo `RoomKit.Key`: deita a chave com o comprimento no X, escala uniforme, centro no pivô e luz pelas probes (`NaoAssar`, pois ela aparece/some).
+- Usado nas **4 chaves**: na coleira do gato (Colinas, em pé com a argola presa), no nicho do alçapão (Escritório), na taça (Estufa), no alto do pedestal (Saguão) e nas **4 chaves inseridas na Porta Principal** (haste na fechadura, argola para o hall). Sem o arquivo, voltam os blocos.
+- **Inventário:** Chave 1 a 4 com o modelo na inspeção 3D.
+- Dourado fosco (metálico 0,35) nas chaves do Saguão e do Escritório: o dourado de metal puro saía preto com a luz assada (mesma lição do Salão).
+- APK, PC e PC VR gerados de novo; Escritório e Colinas conferidos no executável.

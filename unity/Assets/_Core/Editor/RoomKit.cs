@@ -146,6 +146,40 @@ namespace Somnium.EditorTools.Rooms
             return holder.gameObject;
         }
 
+        public const string KeyModelPath = "Assets/Shared/Models/Itens/chave.fbx";
+
+        /// <summary>
+        /// Chave do grupo (chave.fbx), deitada: comprimento ao longo do X local e centro no pivô, escala uniforme.
+        /// <paramref name="orient"/> gira a chave inteira depois (ex.: em pé, enfiada na fechadura). Null sem o arquivo.
+        /// </summary>
+        public static GameObject Key(Transform parent, string name, Vector3 localPos, float length, Material mat, Quaternion orient)
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<GameObject>(KeyModelPath);
+            if (asset == null) { Debug.LogWarning($"[Somnium] Modelo não encontrado: {KeyModelPath}"); return null; }
+            var holder = Child(parent, name, localPos);
+            holder.localRotation = orient;
+            holder.gameObject.AddComponent<Somnium.Core.NaoAssar>(); // pequena e aparece/some: luz pelas probes, fora do bake
+            var rot = Child(holder, "Giro", Vector3.zero);
+            var m = (GameObject)PrefabUtility.InstantiatePrefab(asset);
+            m.name = "Modelo";
+            m.transform.SetParent(rot, false);
+            foreach (var c in m.GetComponentsInChildren<Collider>()) Object.DestroyImmediate(c);
+            if (mat != null) foreach (var r in m.GetComponentsInChildren<Renderer>()) r.sharedMaterials = Enumerable.Repeat(mat, r.sharedMaterials.Length).ToArray();
+            // Comprimento no X e espessura no Y (deitada).
+            var b = LocalBounds(m, holder);
+            if (b.size.z > b.size.x) rot.localRotation = Quaternion.Euler(0f, 90f, 0f);
+            b = LocalBounds(m, holder);
+            if (b.size.y > b.size.z) rot.localRotation = Quaternion.Euler(90f, 0f, 0f) * rot.localRotation;
+            b = LocalBounds(m, holder);
+            rot.localScale = Vector3.one * (length / Mathf.Max(1e-4f, b.size.x));
+            b = LocalBounds(m, holder);
+            m.transform.position += holder.TransformVector(-b.center);
+            return holder.gameObject;
+        }
+
+        public static GameObject Key(Transform parent, string name, Vector3 localPos, float length, Material mat) =>
+            Key(parent, name, localPos, length, mat, Quaternion.identity);
+
         /// <summary>Caixa dos vértices de um modelo no espaço local de <paramref name="space"/>.</summary>
         public static Bounds LocalBounds(GameObject go, Transform space)
         {
