@@ -334,3 +334,11 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 - **Alçapão do Escritório**: corrente (`corrente.fbx`) nos dois braços do X e cadeado com textura (`cadeado-comTextura.fbx`).
 - **Lata de Ração** (`lataRacaoGato.fbx`, com textura): no nicho do alçapão e na inspeção 3D do inventário.
 - Fora do projeto Unity: `models/FBX-L.rar` (o pacote original).
+
+### Versão final para a apresentação + PC VR
+- **PC VR** (`Somnium_VR.exe`, menu **Somnium → Build → PC VR**): pacote **OpenXR 1.19** instalado (`InstalarOpenXR.cs`).
+  - O loader OpenXR é ligado no Standalone **só durante esse build** e desligado em seguida, para o PC normal continuar só de monitor.
+  - O runtime falso de testes do pacote (`mock_runtime.dll`) é removido da pasta do build.
+  - Testado neste PC sem óculos: o OpenXR falha de forma controlada e o jogo roda no monitor. Com Quest Link / Air Link ou SteamVR, abre no óculos (rastreio só de rotação, controles por teclado/gamepad).
+- Builds finais: `Somnium.apk`, `Somnium_PC.zip`, `Somnium_PC_VR.zip` (em `D:\Projetos\Somnium\Claude\builds`).
+- **Roteiro da apresentação em PDF** para o grupo: `docs/guias/Somnium_Roteiro_Apresentacao.pdf` (versões, controles, mapa, percurso com falas sugeridas, o que destacar, plano B e créditos).

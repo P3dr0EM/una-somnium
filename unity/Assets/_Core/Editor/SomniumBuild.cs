@@ -23,6 +23,56 @@ namespace Somnium.EditorTools
         [MenuItem("Somnium/Build/PC (Windows, mouse e teclado)")]
         public static void Windows() => Build(BuildTarget.StandaloneWindows64, "PC", "Somnium.exe");
 
+        const string OpenXRLoader = "UnityEngine.XR.OpenXR.OpenXRLoader";
+
+        /// <summary>
+        /// PC com VR (OpenXR: Meta Quest via Link/Air Link, SteamVR...). Liga o OpenXR no Standalone só durante este build
+        /// e desliga em seguida, para a versão PC normal continuar só de monitor. Sem óculos conectado, abre no monitor.
+        /// </summary>
+        [MenuItem("Somnium/Build/PC VR (Windows, OpenXR)")]
+        public static void WindowsVR()
+        {
+            var perTarget = UnityEditor.XR.Management.XRGeneralSettingsPerBuildTarget.XRGeneralSettingsForBuildTarget(BuildTargetGroup.Standalone);
+            if (perTarget == null || perTarget.AssignedSettings == null)
+            {
+                Debug.LogError("[Somnium] Configuração de XR do Standalone não encontrada.");
+                if (Application.isBatchMode) EditorApplication.Exit(1);
+                return;
+            }
+            bool assigned = UnityEditor.XR.Management.Metadata.XRPackageMetadataStore.AssignLoader(perTarget.AssignedSettings, OpenXRLoader, BuildTargetGroup.Standalone);
+            perTarget.InitManagerOnStart = true;
+            // Desliga o "Mock Runtime" (runtime falso de testes do pacote): sem isso o build ignora o óculos de verdade.
+            var oxr = UnityEngine.XR.OpenXR.OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Standalone);
+            if (oxr != null)
+                foreach (var feature in oxr.GetFeatures())
+                    if (feature.GetType().Name.Contains("Mock") || feature.GetType().Name.Contains("ConformanceAutomation"))
+                    {
+                        if (feature.enabled) Debug.Log($"[Somnium] OpenXR: desligando {feature.GetType().Name}");
+                        feature.enabled = false;
+                        EditorUtility.SetDirty(feature);
+                    }
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[Somnium] OpenXR no Standalone: {(assigned ? "ligado" : "já estava ligado")}.");
+            try
+            {
+                Build(BuildTarget.StandaloneWindows64, "PC_VR", "Somnium_VR.exe");
+                // Tira o runtime falso de testes do pacote (mock_runtime): no PC do jogador vale o runtime real
+                // (Quest Link, SteamVR...); sem óculos, o jogo abre no monitor.
+                string plugins = Path.Combine(DefaultOut, "PC_VR", "Somnium_VR_Data", "Plugins", "x86_64");
+                foreach (var f in new[] { "mock_runtime.dll", "mock_api.dll" })
+                {
+                    string p = Path.Combine(plugins, f);
+                    if (File.Exists(p)) { File.Delete(p); Debug.Log($"[Somnium] Removido do build: {f}"); }
+                }
+            }
+            finally
+            {
+                UnityEditor.XR.Management.Metadata.XRPackageMetadataStore.RemoveLoader(perTarget.AssignedSettings, OpenXRLoader, BuildTargetGroup.Standalone);
+                AssetDatabase.SaveAssets();
+                Debug.Log("[Somnium] OpenXR desligado de novo no Standalone (o PC normal fica só de monitor).");
+            }
+        }
+
         static void Build(BuildTarget target, string subfolder, string fileName)
         {
             string outRoot = DefaultOut;
