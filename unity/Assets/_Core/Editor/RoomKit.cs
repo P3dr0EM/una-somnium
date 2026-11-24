@@ -118,6 +118,52 @@ namespace Somnium.EditorTools.Rooms
             return holder.gameObject;
         }
 
+        /// <summary>
+        /// Encaixa um modelo exatamente numa caixa (centro e tamanho no espaço local do <paramref name="parent"/>, que não pode
+        /// estar girado no momento): escala diferente por eixo. <paramref name="yaw"/> gira o modelo antes (múltiplos de 90°).
+        /// Hierarquia: holder (posição) → fit (escala por eixo) → rot (giro) → modelo. Retorna o holder, ou null sem o arquivo.
+        /// </summary>
+        public static GameObject FitModel(string path, Transform parent, string name, Vector3 center, Vector3 size, float yaw, Material mat)
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (asset == null) { Debug.LogWarning($"[Somnium] Modelo não encontrado: {path}"); return null; }
+            var holder = Child(parent, name, center);
+            var fit = Child(holder, "Escala", Vector3.zero);
+            var rot = Child(fit, "Giro", Vector3.zero);
+            rot.localRotation = Quaternion.Euler(0f, yaw, 0f);
+            var m = (GameObject)PrefabUtility.InstantiatePrefab(asset);
+            m.name = "Modelo";
+            m.transform.SetParent(rot, false);
+            foreach (var c in m.GetComponentsInChildren<Collider>()) Object.DestroyImmediate(c);
+            if (mat != null) foreach (var r in m.GetComponentsInChildren<Renderer>()) r.sharedMaterials = Enumerable.Repeat(mat, r.sharedMaterials.Length).ToArray();
+
+            // Medido no espaço do holder: funciona mesmo com o pai girado (ex.: os braços da corrente em X).
+            var b = LocalBounds(m, holder);
+            Debug.Log($"[Somnium] FitModel {name}: tamanho original {b.size} → alvo {size}");
+            fit.localScale = new Vector3(size.x / Mathf.Max(1e-4f, b.size.x), size.y / Mathf.Max(1e-4f, b.size.y), size.z / Mathf.Max(1e-4f, b.size.z));
+            b = LocalBounds(m, holder);
+            m.transform.position += holder.TransformVector(-b.center);
+            return holder.gameObject;
+        }
+
+        /// <summary>Caixa dos vértices de um modelo no espaço local de <paramref name="space"/>.</summary>
+        public static Bounds LocalBounds(GameObject go, Transform space)
+        {
+            bool any = false;
+            var b = new Bounds();
+            foreach (var mf in go.GetComponentsInChildren<MeshFilter>())
+            {
+                if (mf.sharedMesh == null) continue;
+                foreach (var v in mf.sharedMesh.vertices)
+                {
+                    var p = space.InverseTransformPoint(mf.transform.TransformPoint(v));
+                    if (!any) { b = new Bounds(p, Vector3.zero); any = true; }
+                    else b.Encapsulate(p);
+                }
+            }
+            return b;
+        }
+
         public static Bounds WorldBounds(GameObject go)
         {
             var rs = go.GetComponentsInChildren<Renderer>();

@@ -326,3 +326,11 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 - **`pedestal.fbx`** (estátua com pedestal) no **pé de cada escada**, do lado de fora, de frente para o spawn, iluminadas pelas probes.
 - Retorno do teste: transição da planta e altura do lustre aprovadas.
 - Pasta `models/modelos/Nova pasta` removida pelo P3DR0EM (as cópias dos modelos que vinham dela já estão em `models/` ou exportadas para o Unity; as boias, da Sala das Piscinas cortada, saíram).
+
+## 2026-11-23
+
+### Últimos modelos do grupo (pasta `models/FBX-L`)
+- **Porta Principal** (`porta.fbx`, com as 4 fechaduras): separada no Blender em **batente** e **duas folhas**, cada folha com a sua metade das chapas, para manter a animação de abrir do final. Encaixada no vão de 2,8 × 3,2 m com escala por eixo (`RoomKit.FitModel`, medido no espaço local). Materiais próprios com as texturas do grupo (madeira da porta e pilastras); os do FBX vinham pretos. As chaves inseridas aparecem nas chapas do modelo.
+- **Alçapão do Escritório**: corrente (`corrente.fbx`) nos dois braços do X e cadeado com textura (`cadeado-comTextura.fbx`).
+- **Lata de Ração** (`lataRacaoGato.fbx`, com textura): no nicho do alçapão e na inspeção 3D do inventário.
+- Fora do projeto Unity: `models/FBX-L.rar` (o pacote original).

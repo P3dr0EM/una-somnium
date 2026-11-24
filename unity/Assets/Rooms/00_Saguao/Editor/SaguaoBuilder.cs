@@ -42,6 +42,9 @@ namespace Somnium.EditorTools.Rooms
         static readonly bool BakeLight = true;
         /// <summary>Giro da estátua do grupo para olhar para a entrada (ajustado pelas prévias).</summary>
         const float StatueYaw = 180f; // de frente para o spawn (sul)
+        /// <summary>Porta principal do grupo: giro do modelo (frente com as fechaduras para dentro do hall) e troca das folhas, se vierem trocadas.</summary>
+        const float MainDoorYaw = 90f;
+        const bool MainDoorSwapLeaves = false;
         const string MatFolder = Folder + "/Materials";
         const string PersistenciaPath = "Assets/Scenes/persistencia.unity";
         const string ItemsFolder = "Assets/Data/Items";
@@ -393,17 +396,51 @@ namespace Somnium.EditorTools.Rooms
             var g = Child(root, "PortaPrincipal", Vector3.zero);
             float z = HalfD + 0.06f;
 
-            // Batente.
-            Box(g, "Batente_Esq", new Vector3(-MainDoorHalfW - 0.1f, MainDoorH / 2f, HalfD - 0.02f), new Vector3(0.2f, MainDoorH, 0.12f), wood);
-            Box(g, "Batente_Dir", new Vector3(MainDoorHalfW + 0.1f, MainDoorH / 2f, HalfD - 0.02f), new Vector3(0.2f, MainDoorH, 0.12f), wood);
-            Box(g, "Batente_Topo", new Vector3(0f, MainDoorH + 0.1f, HalfD - 0.02f), new Vector3(MainDoorHalfW * 2f + 0.4f, 0.2f, 0.12f), wood);
+            // Batente: modelo do grupo (porta.fbx separada em batente e folhas), encaixado para o vão ficar com 2,8 x 3,2 m.
+            // No modelo o vão é 4,0 x 6,0 de um batente de 5,38 x 6,67 → escala 0,7 na largura e 0,533 na altura.
+            const string doorDir = "Assets/Rooms/00_Saguao/Models/Porta";
+            var frameH = MainDoorH * 6.67f / 6f;
+            var frame = RoomKit.FitModel($"{doorDir}/porta_batente.fbx", g, "Batente_Modelo", new Vector3(0f, frameH / 2f, HalfD + 0.06f),
+                                         new Vector3(MainDoorHalfW * 2f * 5.38f / 4f, frameH, 0.5f), MainDoorYaw, null);
+            // Materiais próprios (os do FBX vinham sem textura e ficavam pretos): pilastras, folhas, chapas e parafusos.
+            var pillarMat = Mat("Saguao_PortaPilastra", Color.white, 0.25f);
+            pillarMat.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>($"{doorDir}/porta-pilastras2.png"));
+            var leafMat = Mat("Saguao_PortaFolha", Color.white, 0.3f);
+            leafMat.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>($"{doorDir}/portaEsq.jpg"));
+            void Remat(GameObject model)
+            {
+                if (model == null) return;
+                foreach (var r in model.GetComponentsInChildren<Renderer>())
+                {
+                    var ms = r.sharedMaterials;
+                    for (int k = 0; k < ms.Length; k++)
+                    {
+                        string n = ms[k] != null ? ms[k].name : "";
+                        ms[k] = n.Contains("036") ? iron : n.Contains("024") ? gold
+                              : (n.Contains("033") || n.Contains("034") || n.Contains("035")) ? pillarMat : leafMat;
+                    }
+                    r.sharedMaterials = ms;
+                }
+            }
+            Remat(frame);
+            if (frame == null)
+            {
+                Box(g, "Batente_Esq", new Vector3(-MainDoorHalfW - 0.1f, MainDoorH / 2f, HalfD - 0.02f), new Vector3(0.2f, MainDoorH, 0.12f), wood);
+                Box(g, "Batente_Dir", new Vector3(MainDoorHalfW + 0.1f, MainDoorH / 2f, HalfD - 0.02f), new Vector3(0.2f, MainDoorH, 0.12f), wood);
+                Box(g, "Batente_Topo", new Vector3(0f, MainDoorH + 0.1f, HalfD - 0.02f), new Vector3(MainDoorHalfW * 2f + 0.4f, 0.2f, 0.12f), wood);
+            }
 
             // Folhas com pivô na dobradiça; abrem para fora (norte). Só abrem pelo final do jogo.
             var doors = new List<Itr_Door>();
             foreach (var (name, hingeX, dir, angle) in new[] { ("Folha_Esq", -MainDoorHalfW, 1f, -95f), ("Folha_Dir", MainDoorHalfW, -1f, 95f) })
             {
                 var pivot = Child(g, name, new Vector3(hingeX, 0f, z));
-                Box(pivot, "Madeira", new Vector3(dir * MainDoorHalfW / 2f, MainDoorH / 2f, 0f), new Vector3(MainDoorHalfW - 0.02f, MainDoorH - 0.02f, 0.1f), wood);
+                var leafBox = Box(pivot, "Madeira", new Vector3(dir * MainDoorHalfW / 2f, MainDoorH / 2f, 0f), new Vector3(MainDoorHalfW - 0.02f, MainDoorH - 0.02f, 0.1f), wood);
+                // Folha do grupo (com metade das 4 fechaduras); o bloco fica só como colisão.
+                string leafFile = (dir > 0) == MainDoorSwapLeaves ? "porta_folha_dir.fbx" : "porta_folha_esq.fbx";
+                var leafModel = RoomKit.FitModel($"{doorDir}/{leafFile}", pivot, "Folha_Modelo", new Vector3(dir * MainDoorHalfW / 2f, MainDoorH / 2f, 0f),
+                                                 new Vector3(MainDoorHalfW - 0.02f, MainDoorH - 0.02f, 0.2f), MainDoorYaw + 180f, null); // chapas para dentro do hall
+                if (leafModel != null) { leafBox.GetComponent<MeshRenderer>().enabled = false; Remat(leafModel); }
                 var door = pivot.gameObject.AddComponent<Itr_Door>();
                 door.openAngle = angle;
                 door.openSpeed = 1.2f;
@@ -414,12 +451,17 @@ namespace Somnium.EditorTools.Rooms
             // Coluna com as fechaduras na borda da folha esquerda (gira junto) + as chaves que aparecem ao inserir.
             var locks = Child(doors[0].transform, "Fechaduras", new Vector3(MainDoorHalfW - 0.14f, 0f, 0f));
             var inserted = new List<GameObject>();
+            bool modelLocks = frame != null;
             for (int i = 0; i < MainLocks; i++)
             {
-                float y = 1.0f + i * 0.32f;
-                var plate = Box(locks, $"Fechadura_{i + 1}", new Vector3(0f, y, -0.07f), new Vector3(0.14f, 0.18f, 0.04f), iron);
-                Object.DestroyImmediate(plate.GetComponent<Collider>());
-                var key = Box(locks, $"ChaveInserida_{i + 1}", new Vector3(0f, y, -0.12f), new Vector3(0.05f, 0.12f, 0.08f), gold);
+                // Com o modelo: as chaves aparecem nas 4 fechaduras dele (a 1/3, 11/24, 7/12 e 17/24 da altura, junto à junta das folhas).
+                float y = modelLocks ? MainDoorH * (2f + i * 0.75f) / 6f : 1.0f + i * 0.32f;
+                if (!modelLocks)
+                {
+                    var plate = Box(locks, $"Fechadura_{i + 1}", new Vector3(0f, y, -0.07f), new Vector3(0.14f, 0.18f, 0.04f), iron);
+                    Object.DestroyImmediate(plate.GetComponent<Collider>());
+                }
+                var key = Box(locks, $"ChaveInserida_{i + 1}", new Vector3(modelLocks ? 0.06f : 0f, y, -0.14f), new Vector3(0.05f, 0.12f, 0.08f), gold);
                 Object.DestroyImmediate(key.GetComponent<Collider>());
                 key.SetActive(false);
                 inserted.Add(key);

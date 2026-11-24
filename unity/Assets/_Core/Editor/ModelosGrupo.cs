@@ -26,12 +26,21 @@ namespace Somnium.EditorTools
             ("MedalhaoDoSol", "medalhao.fbx", 0.16f),
             ("MedalhaoMetadeA", "medalhao_metade.fbx", 0.15f),
             ("MedalhaoMetadeB", "medalhao_metade.fbx", 0.15f),
+            ("LataDeRacao", "lata_racao.fbx", 0.16f),
         };
 
         /// <summary>Modelos que vieram sem material do Blender (ficam brancos): cor (r, g, b, metálico).</summary>
         static readonly System.Collections.Generic.Dictionary<string, Vector4> NoMaterial = new System.Collections.Generic.Dictionary<string, Vector4>
         {
             { "manivela.fbx", new Vector4(0.3f, 0.29f, 0.28f, 0.6f) }, // ferro escuro
+            { "lata_racao.fbx", new Vector4(1f, 1f, 1f, 0.3f) },        // textura do grupo
+
+        };
+
+        /// <summary>Textura de cada modelo com material próprio (as do FBX não eram encontradas na importação).</summary>
+        public static readonly System.Collections.Generic.Dictionary<string, string> Textures = new System.Collections.Generic.Dictionary<string, string>
+        {
+            { "lata_racao.fbx", ItemModels + "/pote_raçãoGato2.png" },
         };
 
         /// <summary>Prefab do modelo com um material próprio (para a inspeção no inventário).</summary>
@@ -48,6 +57,7 @@ namespace Somnium.EditorTools
                 AssetDatabase.CreateAsset(mat, matPath);
             }
             mat.SetColor("_BaseColor", new Color(c.x, c.y, c.z));
+            if (Textures.TryGetValue(file, out var texPath)) mat.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(texPath));
             mat.SetFloat("_Metallic", c.w);
             mat.SetFloat("_Smoothness", 0.5f);
             EditorUtility.SetDirty(mat);

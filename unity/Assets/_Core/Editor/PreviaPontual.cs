@@ -30,6 +30,8 @@ namespace Somnium.EditorTools.Rooms
             Shot(dir, EstufaBuilder.ScenePath, "Estufa/Irrigacao/Canos", "sprinklers", new Vector3(0.3f, -0.5f, -1f));
             Shot(dir, SaguaoBuilder.ScenePath, "Saguao/Estatua/MedalhaoEncaixado", "medalhao_encaixado", new Vector3(0.15f, 0.1f, -1f), "MedalhaoEncaixado");
             Shot(dir, SalaoBuilder.ScenePath, "SalaoInvertido/Lustre_Puzzle/Lustre", "lustre_mesa", new Vector3(0.8f, -1f, -0.6f));
+            Shot(dir, EscritorioBuilder.ScenePath, "EscritorioAzul/Alcapao/Corrente/Cadeado", "cadeado", new Vector3(0.2f, 0.6f, -1f));
+            Shot(dir, EscritorioBuilder.ScenePath, "EscritorioAzul/Alcapao/Nicho/Pickup_LataRacao", "lata", new Vector3(0.3f, 0.9f, -1f), "Nicho");
         }
     }
 }
