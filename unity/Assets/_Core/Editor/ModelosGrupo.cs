@@ -103,7 +103,8 @@ namespace Somnium.EditorTools
         }
 
         /// <summary>
-        /// Todos os modelos (FBX/OBJ) das salas e itens: gerar UV de lightmap na importação.
+        /// Todos os modelos (FBX/OBJ) das salas e itens: gerar UV de lightmap na importação. Sem luzes e câmeras do Blender:
+        /// FBX com "Lamp" embutida vira luz pontual com sombra na cena (deixou o Escritório todo azul-escuro no build).
         /// Sem isso, modelos estáticos em salas com luz assada ficam pretos (o bake não tem onde gravar a luz deles).
         /// </summary>
         static void ConfigureModelImports()
@@ -112,12 +113,15 @@ namespace Somnium.EditorTools
             foreach (var guid in AssetDatabase.FindAssets("t:Model", new[] { "Assets/Rooms", "Assets/Shared" }))
             {
                 var path = AssetDatabase.GUIDToAssetPath(guid);
-                if (!(AssetImporter.GetAtPath(path) is ModelImporter imp) || imp.generateSecondaryUV) continue;
+                if (!(AssetImporter.GetAtPath(path) is ModelImporter imp)) continue;
+                if (imp.generateSecondaryUV && !imp.importLights && !imp.importCameras) continue;
                 imp.generateSecondaryUV = true;
+                imp.importLights = false;
+                imp.importCameras = false;
                 imp.SaveAndReimport();
                 n++;
             }
-            if (n > 0) Debug.Log($"[Somnium] UV de lightmap ativado em {n} modelo(s).");
+            if (n > 0) Debug.Log($"[Somnium] Importação ajustada (UV de lightmap, sem luzes/câmeras) em {n} modelo(s).");
         }
 
         static void ConfigureTextures()

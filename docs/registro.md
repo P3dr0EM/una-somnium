@@ -342,3 +342,10 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
   - Testado neste PC sem óculos: o OpenXR falha de forma controlada e o jogo roda no monitor. Com Quest Link / Air Link ou SteamVR, abre no óculos (rastreio só de rotação, controles por teclado/gamepad).
 - Builds finais: `Somnium.apk`, `Somnium_PC.zip`, `Somnium_PC_VR.zip` (em `D:\Projetos\Somnium\Claude\builds`).
 - **Roteiro da apresentação em PDF** para o grupo: `docs/guias/Somnium_Roteiro_Apresentacao.pdf` (versões, controles, mapa, percurso com falas sugeridas, o que destacar, plano B e créditos).
+
+### Correção: Escritório Azul "quebrado" no build de PC
+- **Sintoma** (teste do P3DR0EM): ao entrar no Escritório, a tela ficava toda azul-escuro. No editor a sala aparecia normal.
+- **Causa:** os FBX do cadeado, da corrente e da lata vieram do Blender com a luz da cena ("Lamp") dentro. O Unity importou cada uma como **luz pontual com sombra** (4 no total) colada nos modelos do alçapão, e isso estragava a imagem da sala inteira no jogo.
+- **Correção:** `ModelosGrupo.ConfigureModelImports` agora desliga **importar luzes e câmeras** em todos os modelos das salas e itens (31 reimportados) e as salas foram regeradas.
+- Teste no executável com `TesteAutomatico.cs` (novo, só age com argumentos): `Somnium.exe -somniumIrPara <cena> -somniumCaptura <png>` troca de sala sozinho, tira um print e lista as luzes com sombra. Também aceita `-somniumDesligar Nome1,Nome2` e `-somniumMedir Nome1,Nome2` para isolar problemas. Escritório conferido no PC e no PC VR.
+- APK, `Somnium_PC.zip` e `Somnium_PC_VR.zip` gerados de novo.
