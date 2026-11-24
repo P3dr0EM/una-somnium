@@ -320,7 +320,8 @@ namespace Somnium.EditorTools.Rooms
             // Chave 2: objeto sem escala com o item e a colisão; bloco e brilho como filhos (somem juntos ao pegar).
             var key = RoomKit.Child(pit, "Pickup_Chave2", new Vector3(-0.2f, -PitDepth + 0.02f, zc - 0.1f));
             key.localRotation = Quaternion.Euler(0f, 25f, 0f);
-            RoomKit.Box(key, "Chave", Vector3.zero, new Vector3(0.18f, 0.03f, 0.06f), gold, false);
+            if (RoomKit.Key(key, "Chave", Vector3.zero, 0.18f, kit.Mat("Escritorio_ChaveDourada", new Color(0.9f, 0.72f, 0.28f), 0.55f, 0.35f)) == null) // modelo do grupo; sem ele, bloco
+                RoomKit.Box(key, "Chave", Vector3.zero, new Vector3(0.18f, 0.03f, 0.06f), gold, false);
             var kc = key.gameObject.AddComponent<BoxCollider>(); kc.size = new Vector3(0.36f, 0.24f, 0.3f); kc.isTrigger = true;
             var kp = key.gameObject.AddComponent<ItemPickup>(); kp.item = RoomKit.Item("Chave2"); kp.saveId = "escritorio/chave2";
             // O nicho é escuro: um brilho que pisca de vez em quando, como na Manivela da Colinas.
@@ -329,9 +330,16 @@ namespace Somnium.EditorTools.Rooms
             glint.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
             glint.AddComponent<Brilho>().maxScale = 0.1f;
 
-            var can = RoomKit.Prim(PrimitiveType.Cylinder, pit, "Pickup_LataRacao", new Vector3(0.22f, -PitDepth + 0.06f, zc + 0.15f), new Vector3(0.16f, 0.06f, 0.16f), tin);
-            RoomKit.Prim(PrimitiveType.Cylinder, can.transform, "Rotulo", Vector3.zero, new Vector3(1.02f, 0.6f, 1.02f), labelMat);
-            var cc = can.AddComponent<BoxCollider>(); cc.size = new Vector3(2.2f, 3f, 2.2f); cc.isTrigger = true;
+            // Lata de ração do grupo (lataRacaoGato, com textura); sem ela, cilindros.
+            var can = RoomKit.Child(pit, "Pickup_LataRacao", new Vector3(0.22f, -PitDepth, zc + 0.15f)).gameObject;
+            var canMat = kit.Mat("Escritorio_LataRacao", Color.white, 0.5f, 0.3f);
+            canMat.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(ModelosGrupo.Textures["lata_racao.fbx"]));
+            if (RoomKit.Model($"{ModelosGrupo.ItemModels}/lata_racao.fbx", can.transform, "Lata_Modelo", Vector3.zero, 0f, 0.15f, true, canMat) == null)
+            {
+                RoomKit.Prim(PrimitiveType.Cylinder, can.transform, "Lata", new Vector3(0f, 0.06f, 0f), new Vector3(0.16f, 0.06f, 0.16f), tin);
+                RoomKit.Prim(PrimitiveType.Cylinder, can.transform, "Rotulo", new Vector3(0f, 0.06f, 0f), new Vector3(0.163f, 0.036f, 0.163f), labelMat);
+            }
+            var cc = can.AddComponent<BoxCollider>(); cc.center = new Vector3(0f, 0.1f, 0f); cc.size = new Vector3(0.35f, 0.3f, 0.35f); cc.isTrigger = true;
             var cp = can.AddComponent<ItemPickup>(); cp.item = RoomKit.Item("LataDeRacao"); cp.saveId = "escritorio/lata";
 
             // Tampa com dobradiça na borda do fundo; abre para cima.
@@ -344,9 +352,19 @@ namespace Somnium.EditorTools.Rooms
 
             // Corrente em X com cadeado.
             var chain = RoomKit.Child(g, "Corrente", new Vector3(0f, 0.035f, zc));
+            // Corrente e cadeado do grupo (corrente.fbx, cadeado com textura); sem eles, blocos.
             foreach (float a in new[] { 45f, -45f })
-                RoomKit.Box(chain, $"Elo_{a}", Vector3.zero, new Vector3(1.35f, 0.03f, 0.05f), chainMat, false).transform.localRotation = Quaternion.Euler(0f, a, 0f);
-            RoomKit.Box(chain, "Cadeado", new Vector3(0f, 0.06f, 0f), new Vector3(0.1f, 0.12f, 0.05f), brass, false);
+            {
+                var arm = RoomKit.Child(chain, $"Elo_{a}", Vector3.zero);
+                arm.localRotation = Quaternion.Euler(0f, a, 0f);
+                if (RoomKit.FitModel($"{ModelFolder}/corrente.fbx", arm, "Corrente_Modelo", Vector3.zero, new Vector3(1.35f, 0.05f, 0.05f), ChainYaw, chainMat) == null)
+                    RoomKit.Box(arm, "Elo", Vector3.zero, new Vector3(1.35f, 0.03f, 0.05f), chainMat, false);
+            }
+            var padMat = kit.Mat("Escritorio_Cadeado", Color.white, 0.5f, 0.4f);
+            padMat.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>($"{ModelFolder}/texturaCadeado3.4.png"));
+            var padlock = RoomKit.Model($"{ModelFolder}/cadeado.fbx", chain, "Cadeado", new Vector3(0f, 0.02f, -0.03f), 0f, 0.16f, true, padMat);
+            if (padlock != null) padlock.transform.localRotation = Quaternion.Euler(0f, PadlockYaw, 0f);
+            else RoomKit.Box(chain, "Cadeado", new Vector3(0f, 0.06f, 0f), new Vector3(0.1f, 0.12f, 0.05f), brass, false);
             foreach (var c in new[] { new Vector3(-0.62f, 0f, -0.62f), new Vector3(0.62f, 0f, -0.62f), new Vector3(-0.62f, 0f, 0.62f), new Vector3(0.62f, 0f, 0.62f) })
                 RoomKit.Box(chain, "Argola", c, new Vector3(0.07f, 0.05f, 0.07f), chainMat, false);
 
@@ -437,6 +455,8 @@ namespace Somnium.EditorTools.Rooms
 
         /// <summary>Giro do cofre do grupo para a porta ficar virada para o corredor (ajustado pelas prévias).</summary>
         const float SafeYaw = 0f;
+        /// <summary>Giros da corrente (comprimento no eixo X) e do cadeado do grupo (frente para quem chega).</summary>
+        const float ChainYaw = 0f, PadlockYaw = 0f;
 
         // ------------------------------------------------------------------ luz fluorescente
 
@@ -484,6 +504,7 @@ namespace Somnium.EditorTools.Rooms
                 s.Shot("2_mesas", O(0f, 1.65f, -10.3f), O(-3.4f, 0.8f, -8f));
                 s.Shot("3_corredor_lateral", O(-4.5f, 1.65f, -4.5f), O(-4.5f, 1.2f, 10f));
                 s.Shot("4_alcapao", O(0f, 1.65f, zc - 2.2f), O(0f, 0f, zc));
+                s.Shot("9_cadeado_corrente", O(0.6f, 1.2f, zc - 1.2f), O(0f, 0f, zc));
                 s.Shot("5_almoxarifado", O(2.6f, 1.65f, 8.6f), ClosetPos + Origin + new Vector3(0f, 1f, 0f));
 
                 // Estado resolvido: corrente cortada, tampa aberta, armário aberto.

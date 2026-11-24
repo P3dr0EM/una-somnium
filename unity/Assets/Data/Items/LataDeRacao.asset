@@ -15,6 +15,6 @@ MonoBehaviour:
   displayName: "Lata de Ra\xE7\xE3o"
   description: Cheiro forte. Algum animal adoraria isto.
   icon: {fileID: 0}
-  inspectModel: {fileID: 0}
-  inspectSize: 0.22
+  inspectModel: {fileID: 6365419097756063920, guid: ec07a011a5f8aa94c9288d514bb0d1a3, type: 3}
+  inspectSize: 0.16
   combinations: []

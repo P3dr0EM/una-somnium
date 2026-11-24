@@ -26,12 +26,26 @@ namespace Somnium.EditorTools
             ("MedalhaoDoSol", "medalhao.fbx", 0.16f),
             ("MedalhaoMetadeA", "medalhao_metade.fbx", 0.15f),
             ("MedalhaoMetadeB", "medalhao_metade.fbx", 0.15f),
+            ("LataDeRacao", "lata_racao.fbx", 0.16f),
+            ("Chave1", "chave.fbx", 0.2f),
+            ("Chave2", "chave.fbx", 0.2f),
+            ("Chave3", "chave.fbx", 0.2f),
+            ("Chave4", "chave.fbx", 0.2f),
         };
 
         /// <summary>Modelos que vieram sem material do Blender (ficam brancos): cor (r, g, b, metálico).</summary>
         static readonly System.Collections.Generic.Dictionary<string, Vector4> NoMaterial = new System.Collections.Generic.Dictionary<string, Vector4>
         {
             { "manivela.fbx", new Vector4(0.3f, 0.29f, 0.28f, 0.6f) }, // ferro escuro
+            { "lata_racao.fbx", new Vector4(1f, 1f, 1f, 0.3f) },        // textura do grupo
+            { "chave.fbx", new Vector4(0.83f, 0.64f, 0.25f, 0.4f) },     // latão dourado
+
+        };
+
+        /// <summary>Textura de cada modelo com material próprio (as do FBX não eram encontradas na importação).</summary>
+        public static readonly System.Collections.Generic.Dictionary<string, string> Textures = new System.Collections.Generic.Dictionary<string, string>
+        {
+            { "lata_racao.fbx", ItemModels + "/pote_raçãoGato2.png" },
         };
 
         /// <summary>Prefab do modelo com um material próprio (para a inspeção no inventário).</summary>
@@ -48,6 +62,7 @@ namespace Somnium.EditorTools
                 AssetDatabase.CreateAsset(mat, matPath);
             }
             mat.SetColor("_BaseColor", new Color(c.x, c.y, c.z));
+            if (Textures.TryGetValue(file, out var texPath)) mat.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(texPath));
             mat.SetFloat("_Metallic", c.w);
             mat.SetFloat("_Smoothness", 0.5f);
             EditorUtility.SetDirty(mat);
@@ -93,7 +108,8 @@ namespace Somnium.EditorTools
         }
 
         /// <summary>
-        /// Todos os modelos (FBX/OBJ) das salas e itens: gerar UV de lightmap na importação.
+        /// Todos os modelos (FBX/OBJ) das salas e itens: gerar UV de lightmap na importação. Sem luzes e câmeras do Blender:
+        /// FBX com "Lamp" embutida vira luz pontual com sombra na cena (deixou o Escritório todo azul-escuro no build).
         /// Sem isso, modelos estáticos em salas com luz assada ficam pretos (o bake não tem onde gravar a luz deles).
         /// </summary>
         static void ConfigureModelImports()
@@ -102,12 +118,15 @@ namespace Somnium.EditorTools
             foreach (var guid in AssetDatabase.FindAssets("t:Model", new[] { "Assets/Rooms", "Assets/Shared" }))
             {
                 var path = AssetDatabase.GUIDToAssetPath(guid);
-                if (!(AssetImporter.GetAtPath(path) is ModelImporter imp) || imp.generateSecondaryUV) continue;
+                if (!(AssetImporter.GetAtPath(path) is ModelImporter imp)) continue;
+                if (imp.generateSecondaryUV && !imp.importLights && !imp.importCameras) continue;
                 imp.generateSecondaryUV = true;
+                imp.importLights = false;
+                imp.importCameras = false;
                 imp.SaveAndReimport();
                 n++;
             }
-            if (n > 0) Debug.Log($"[Somnium] UV de lightmap ativado em {n} modelo(s).");
+            if (n > 0) Debug.Log($"[Somnium] Importação ajustada (UV de lightmap, sem luzes/câmeras) em {n} modelo(s).");
         }
 
         static void ConfigureTextures()

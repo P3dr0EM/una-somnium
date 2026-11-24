@@ -326,3 +326,34 @@ Ficam no repositório (`una-somnium/docs/`), para o Caio ver. O roteiro em PDF e
 - **`pedestal.fbx`** (estátua com pedestal) no **pé de cada escada**, do lado de fora, de frente para o spawn, iluminadas pelas probes.
 - Retorno do teste: transição da planta e altura do lustre aprovadas.
 - Pasta `models/modelos/Nova pasta` removida pelo P3DR0EM (as cópias dos modelos que vinham dela já estão em `models/` ou exportadas para o Unity; as boias, da Sala das Piscinas cortada, saíram).
+
+## 2026-11-23
+
+### Últimos modelos do grupo (pasta `models/FBX-L`)
+- **Porta Principal** (`porta.fbx`, com as 4 fechaduras): separada no Blender em **batente** e **duas folhas**, cada folha com a sua metade das chapas, para manter a animação de abrir do final. Encaixada no vão de 2,8 × 3,2 m com escala por eixo (`RoomKit.FitModel`, medido no espaço local). Materiais próprios com as texturas do grupo (madeira da porta e pilastras); os do FBX vinham pretos. As chaves inseridas aparecem nas chapas do modelo.
+- **Alçapão do Escritório**: corrente (`corrente.fbx`) nos dois braços do X e cadeado com textura (`cadeado-comTextura.fbx`).
+- **Lata de Ração** (`lataRacaoGato.fbx`, com textura): no nicho do alçapão e na inspeção 3D do inventário.
+- Fora do projeto Unity: `models/FBX-L.rar` (o pacote original).
+
+### Versão final para a apresentação + PC VR
+- **PC VR** (`Somnium_VR.exe`, menu **Somnium → Build → PC VR**): pacote **OpenXR 1.19** instalado (`InstalarOpenXR.cs`).
+  - O loader OpenXR é ligado no Standalone **só durante esse build** e desligado em seguida, para o PC normal continuar só de monitor.
+  - O runtime falso de testes do pacote (`mock_runtime.dll`) é removido da pasta do build.
+  - Testado neste PC sem óculos: o OpenXR falha de forma controlada e o jogo roda no monitor. Com Quest Link / Air Link ou SteamVR, abre no óculos (rastreio só de rotação, controles por teclado/gamepad).
+- Builds finais: `Somnium.apk`, `Somnium_PC.zip`, `Somnium_PC_VR.zip` (em `D:\Projetos\Somnium\Claude\builds`).
+- **Roteiro da apresentação em PDF** para o grupo: `docs/guias/Somnium_Roteiro_Apresentacao.pdf` (versões, controles, mapa, percurso com falas sugeridas, o que destacar, plano B e créditos).
+
+### Correção: Escritório Azul "quebrado" no build de PC
+- **Sintoma** (teste do P3DR0EM): ao entrar no Escritório, a tela ficava toda azul-escuro. No editor a sala aparecia normal.
+- **Causa:** os FBX do cadeado, da corrente e da lata vieram do Blender com a luz da cena ("Lamp") dentro. O Unity importou cada uma como **luz pontual com sombra** (4 no total) colada nos modelos do alçapão, e isso estragava a imagem da sala inteira no jogo.
+- **Correção:** `ModelosGrupo.ConfigureModelImports` agora desliga **importar luzes e câmeras** em todos os modelos das salas e itens (31 reimportados) e as salas foram regeradas.
+- Teste no executável com `TesteAutomatico.cs` (novo, só age com argumentos): `Somnium.exe -somniumIrPara <cena> -somniumCaptura <png>` troca de sala sozinho, tira um print e lista as luzes com sombra. Também aceita `-somniumDesligar Nome1,Nome2` e `-somniumMedir Nome1,Nome2` para isolar problemas. Escritório conferido no PC e no PC VR.
+- APK, `Somnium_PC.zip` e `Somnium_PC_VR.zip` gerados de novo.
+
+### Modelo da chave (enviado pelo Caio)
+- `models/chave.fbx` → `Shared/Models/Itens/chave.fbx` (150 triângulos, sem material: recebe dourado fosco).
+- Novo `RoomKit.Key`: deita a chave com o comprimento no X, escala uniforme, centro no pivô e luz pelas probes (`NaoAssar`, pois ela aparece/some).
+- Usado nas **4 chaves**: na coleira do gato (Colinas, em pé com a argola presa), no nicho do alçapão (Escritório), na taça (Estufa), no alto do pedestal (Saguão) e nas **4 chaves inseridas na Porta Principal** (haste na fechadura, argola para o hall). Sem o arquivo, voltam os blocos.
+- **Inventário:** Chave 1 a 4 com o modelo na inspeção 3D.
+- Dourado fosco (metálico 0,35) nas chaves do Saguão e do Escritório: o dourado de metal puro saía preto com a luz assada (mesma lição do Salão).
+- APK, PC e PC VR gerados de novo; Escritório e Colinas conferidos no executável.
